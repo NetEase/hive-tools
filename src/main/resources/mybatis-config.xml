@@ -19,6 +19,6 @@
         </environment>
     </environments>
     <mappers>
-        <mapper resource='DbsMapper.xml'/>
+        <mapper resource='MetaDataMapper.xml'/>
     </mappers>
 </configuration>
