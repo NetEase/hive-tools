@@ -47,7 +47,7 @@
         <foreach collection="list" item="item" index="index" separator=",">
             (${mapPlusId.DBS} + #{item.db_id}, #{item.desc}, #{item.db_location_uri},
             <if test="item.getName() == 'default'">
-                CONCAT(#{item.name},'@','${mapPlusId.sourceName}'),
+                CONCAT(#{item.name},'_','${mapPlusId.sourceName}'),
             </if>
             <if test="item.getName() != 'default'">
                 #{item.name},
@@ -558,7 +558,7 @@
             (${mapPlusId.ROLES} + #{item.role_id}, #{item.create_time}, #{item.owner_name}, #{item.role_name}))
         </foreach-->
         <foreach collection="list" item="item" index="index" separator=",">
-            (${mapPlusId.ROLES} + #{item.role_id}, #{item.create_time}, #{item.owner_name}, CONCAT(#{item.role_name},'@','${mapPlusId.sourceName}'))
+            (${mapPlusId.ROLES} + #{item.role_id}, #{item.create_time}, #{item.owner_name}, CONCAT(#{item.role_name},'_','${mapPlusId.sourceName}'))
         </foreach>
     </insert>
     <select id="checkUniqueKeyRoles" parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Roles'>

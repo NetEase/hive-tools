@@ -1,4 +1,4 @@
-package com.netease.hivetools;
+package com.netease.hivetools.apps;
 
 import com.alibaba.druid.sql.SQLUtils;
 import com.alibaba.druid.sql.ast.SQLDataType;
@@ -26,7 +26,7 @@ public class SchemaToMetaBean {
 
 	public static void main(String[] args) {
 
-		String fileContext = readSchemaFile(System.getProperty("user.dir") + "/src/main/resources/hive-schema.sql");
+		String fileContext = readSchemaFile(System.getProperty("user.dir") + "/src/main/resources/Hive-DDL-MySQL-CREATE.sql");
 
 		List<String> createStatement = new ArrayList<>();
 

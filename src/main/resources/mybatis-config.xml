@@ -20,5 +20,6 @@
     </environments>
     <mappers>
         <mapper resource='MetaDataMapper.xml'/>
+        <mapper resource='MammutMapper.xml'/>
     </mappers>
 </configuration>

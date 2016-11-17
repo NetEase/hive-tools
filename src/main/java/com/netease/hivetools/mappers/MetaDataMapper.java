@@ -1,6 +1,6 @@
 package com.netease.hivetools.mappers;
 
-import com.netease.hivetools.SchemaToMetaBean;
+import com.netease.hivetools.apps.SchemaToMetaBean;
 import com.netease.hivetools.service.MyBatisUtil;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.log4j.Logger;
@@ -81,7 +81,7 @@ public class MetaDataMapper {
     SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
     try {
       String tableName = SchemaToMetaBean.formatTableColumnName(tabName, true);
-      logger.info("batchInsert" + tabName + " plusId = " + mapPlusId.get(tabName));
+      logger.info("批量插入表 " + tabName + " plusId = " + mapPlusId.get(tabName));
 
       if (tabName.equals("COMPACTION_QUEUE")) {
         int nnn = 0;
@@ -97,9 +97,9 @@ public class MetaDataMapper {
         String statement = "com.netease.hivetools.mappers.MetaDataMapper.batchInsert" + tableName;
         numInsert = sqlSession.insert(statement, params);
         int progress = ((index++ + 1)*100 / splitList.size());
-        logger.info("batch insert table " + tabName + " record progress [" + progress +"%]");
+        logger.info("批量插入表 " + tabName + " 处理进度 [" + progress +"%]");
       }
-      logger.info("batch insert table " + tabName + " record [" + list.size()+"]");
+      logger.info("批量插入表 " + tabName + " 记录总数 [" + list.size()+"]");
       sqlSession.commit();
     } catch (Exception e) {
       e.printStackTrace();
@@ -118,7 +118,7 @@ public class MetaDataMapper {
     SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
     try {
       String tableName = SchemaToMetaBean.formatTableColumnName(tabName, true);
-      logger.info("checkUniqueKey" + tabName);
+      logger.info("检查唯一键冲突 " + tabName);
 
       List<List<Object>> splitList = MetaDataMapper.getSplitList(list, 100);
       int index = 0;
@@ -132,9 +132,9 @@ public class MetaDataMapper {
           listUniqueKey.addAll(listTmp);
         }
         int progress = ((index++ + 1)*100 / splitList.size());
-        logger.info("check Unique Key table " + tabName + " progress [" + progress +"%]");
+        logger.info("检查唯一键, 表 " + tabName + " 进度 [" + progress +"%]");
       }
-      logger.info("batch Unique Key table " + tabName + " record [" + list.size()+"]");
+      logger.info("检查唯一键, 表 " + tabName + " 记录数 [" + list.size()+"]");
       sqlSession.commit();
     } catch (Exception e) {
       e.printStackTrace();

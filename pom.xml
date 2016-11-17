@@ -19,9 +19,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
   xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
-  <groupId>netease.bigdata</groupId>
+  <groupId>com.netease</groupId>
   <artifactId>hive-tools</artifactId>
-  <version>0.1-SNAPSHOT</version>
+  <version>0.1</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -30,7 +30,7 @@
     <scala.binary.version>2.11</scala.binary.version>
     <slf4j.version>1.7.16</slf4j.version>
     <log4j.version>1.2.17</log4j.version>
-    <calcite.version>1.10.0</calcite.version>
+    <calcite.version>1.6.0</calcite.version>
     <guava.version>20.0-rc1</guava.version>
     <jsqlparser.version>0.8.0</jsqlparser.version>
     <derby.version>10.12.1.1</derby.version>
@@ -47,8 +47,23 @@
   </properties>
   <repositories>
     <repository>
-      <id>twttr</id>
-      <url>http://maven.twttr.com/</url>
+      <id>apache.snapshots.https</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>https://repository.apache.org/content/repositories/snapshots</url>
+      <snapshots>
+        <enabled>true</enabled>
+      </snapshots>
+    </repository>
+    <repository>
+      <id>apache.public.https</id>
+      <name>Apache Development Snapshot Repository</name>
+      <url>https://repository.apache.org/content/repositories/public</url>
+      <releases>
+        <enabled>true</enabled>
+      </releases>
+      <snapshots>
+        <enabled>false</enabled>
+      </snapshots>
     </repository>
   </repositories>
   <dependencies>
@@ -128,9 +143,38 @@
       <artifactId>commons-cli</artifactId>
       <version>1.2</version>
     </dependency>
+    <dependency>
+      <groupId>org.apache.hadoop</groupId>
+      <artifactId>hadoop-common</artifactId>
+      <version>2.7.0</version>
+    </dependency>
   </dependencies>
 
   <build>
+    <resources>
+      <!--resource>
+        <includes>
+          <include>*.json</include>
+          <include>*.sql</include>
+          <include>hive-tools.properties</include>
+          <include>log4j.properties</include>
+        </includes>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+        <targetPath>/target/classes</targetPath>
+      </resource-->
+      <resource>
+        <excludes>
+          <exclude>*.sql</exclude>
+          <exclude>*.json</exclude>
+          <exclude>hive-tools.sh</exclude>
+          <exclude>hive-tools.properties</exclude>
+          <exclude>log4j.properties</exclude>
+        </excludes>
+        <directory>src/main/resources</directory>
+        <filtering>true</filtering>
+      </resource>
+    </resources>
     <plugins>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -140,27 +184,94 @@
           <source>${java.version}</source>
           <target>${java.version}</target>
         </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-jar-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <addClasspath>true</addClasspath>
+              <mainClass>com.netease.hivetools.apps.MetaDataMerge</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+      <plugin>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <version>2.2-beta-5</version>
+        <configuration>
+          <appendAssemblyId>false</appendAssemblyId>
+          <archive>
+            <manifest>
+              <mainClass>com.netease.hivetools.apps.MetaDataMerge</mainClass>
+            </manifest>
+          </archive>
+          <descriptorRefs>
+            <descriptorRef>jar-with-dependencies</descriptorRef>
+          </descriptorRefs>
+        </configuration>
         <executions>
           <execution>
-            <phase>compile</phase>
+            <id>make-assembly</id>
+            <phase>package</phase>
             <goals>
-              <goal>compile</goal>
+              <goal>single</goal>
             </goals>
           </execution>
         </executions>
       </plugin>
+
       <plugin>
-        <groupId>net.alchim31.maven</groupId>
-        <artifactId>scala-maven-plugin</artifactId>
-        <version>3.2.2</version>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-resources-plugin</artifactId>
+        <version>2.6</version>
         <executions>
           <execution>
-            <id>scala-compile-first</id>
-            <phase>process-resources</phase>
+            <id>copy-resources</id>
+            <phase>package</phase>
             <goals>
-              <goal>add-source</goal>
-              <goal>compile</goal>
+              <goal>copy-resources</goal>
             </goals>
+            <configuration>
+              <encoding>UTF-8</encoding>
+              <outputDirectory>${project.build.directory}/classes</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/resources/</directory>
+                  <filtering>false</filtering>
+                  <excludes>
+                    <exclude>*.json</exclude>
+                    <exclude>*.sql</exclude>
+                    <exclude>hive-tools.sh</exclude>
+                    <exclude>hive-tools.properties</exclude>
+                    <exclude>log4j.properties</exclude>
+                  </excludes>
+                </resource>
+              </resources>
+            </configuration>
+          </execution>
+          <execution>
+            <id>copy-command</id>
+            <phase>package</phase>
+            <goals>
+              <goal>copy-resources</goal>
+            </goals>
+            <configuration>
+              <encoding>UTF-8</encoding>
+              <outputDirectory>${project.build.directory}</outputDirectory>
+              <resources>
+                <resource>
+                  <directory>src/main/resources/</directory>
+                  <filtering>true</filtering>
+                  <includes>
+                    <include>hive-tools.sh</include>
+                    <include>hive-tools.properties</include>
+                    <include>log4j.properties</include>
+                  </includes>
+                </resource>
+              </resources>
+            </configuration>
           </execution>
         </executions>
       </plugin>
