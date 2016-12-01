@@ -25,6 +25,9 @@
             (${mapPlusId.CDS} + #{item.cd_id} )
         </foreach>
     </insert>
+    <delete id="rollbackCds" parameterType="java.util.Map">
+        DELETE FROM CDS WHERE CD_ID > ${mapPlusId.CDS}
+    </delete>
 
     <!--DBS-->
     <select id='getDbsRecords' resultType='com.netease.hivetools.meta.Dbs'>
@@ -46,12 +49,7 @@
         INSERT INTO DBS (`DB_ID`,`DESC`,`DB_LOCATION_URI`,`NAME`,`OWNER_NAME`,`OWNER_TYPE`) VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (${mapPlusId.DBS} + #{item.db_id}, #{item.desc}, #{item.db_location_uri},
-            <if test="item.getName() == 'default'">
-                CONCAT(#{item.name},'_','${mapPlusId.sourceName}'),
-            </if>
-            <if test="item.getName() != 'default'">
-                #{item.name},
-            </if>
+            CONCAT('${mapPlusId.sourceName}','_',#{item.name}),
             #{item.owner_name}, #{item.owner_type})
         </foreach>
     </insert>
@@ -61,6 +59,9 @@
             #{item.name}
         </foreach>
     </select>
+    <delete id="rollbackDbs" parameterType="java.util.Map">
+        DELETE FROM DBS WHERE DB_ID > ${mapPlusId.DBS}
+    </delete>
 
     <!--DELEGATION_TOKENS-->
     <select id='getDelegationTokensRecords' resultType='com.netease.hivetools.meta.DelegationTokens'>
@@ -84,6 +85,9 @@
             (#{item.token_ident}, #{item.token}} )
         </foreach>
     </insert>
+    <delete id="rollbackDelegationTokens" parameterType="java.util.Map">
+        SELECT 0 FROM dual
+    </delete>
 
     <!--compaction_queue-->
     <select id='getCompactionQueueRecords' resultType='com.netease.hivetools.meta.CompactionQueue'>
@@ -107,6 +111,9 @@
             (${mapPlusId.COMPACTION_QUEUE} + #{item.cq_id}, #{item.cq_database}, #{item.cq_table}, #{item.cq_partition}, #{item.cq_state}, #{item.cq_type}, #{item.cq_worker_id}, #{item.cq_start}, #{item.cq_run_as})
         </foreach>
     </insert>
+    <delete id="rollbackCompactionQueue" parameterType="java.util.Map">
+        DELETE FROM COMPACTION_QUEUE WHERE CQ_ID > ${mapPlusId.COMPACTION_QUEUE}
+    </delete>
 
     <!--COMPLETED_TXN_COMPONENTS-->
     <select id='getCompletedTxnComponentsRecords' resultType='com.netease.hivetools.meta.CompletedTxnComponents'>
@@ -130,6 +137,9 @@
             (${mapPlusId.COMPLETED_TXN_COMPONENTS} + #{item.ctc_txnid}, #{item.ctc_database}, #{item.ctc_table}, #{item.ctc_partition})
         </foreach>
     </insert>
+    <delete id="rollbackCompletedTxnComponents" parameterType="java.util.Map">
+        DELETE FROM COMPLETED_TXN_COMPONENTS WHERE CTC_TXNID > ${mapPlusId.COMPLETED_TXN_COMPONENTS}
+    </delete>
 
     <!--GLOBAL_PRIVS-->
     <select id='getGlobalPrivsRecords' resultType='com.netease.hivetools.meta.GlobalPrivs'>
@@ -153,6 +163,9 @@
             (${mapPlusId.GLOBAL_PRIVS} + #{item.user_grant_id}, #{item.create_time}, #{item.grant_option}, #{item.grantor}, #{item.grantor_type}, #{item.principal_name}, #{item.principal_type}, #{item.user_priv})
         </foreach>
     </insert>
+    <delete id="rollbackGlobalPrivs" parameterType="java.util.Map">
+        DELETE FROM GLOBAL_PRIVS WHERE USER_GRANT_ID > ${mapPlusId.GLOBAL_PRIVS}
+    </delete>
 
     <!--NEXT_TXN_ID-->
     <select id='getNextTxnIdRecords' resultType='com.netease.hivetools.meta.NextTxnId'>
@@ -176,6 +189,9 @@
             (${mapPlusId.NEXT_TXN_ID} + #{item.ntxn_next})
         </foreach>
     </insert>
+    <delete id="rollbackNextTxnId" parameterType="java.util.Map">
+        DELETE FROM NEXT_TXN_ID WHERE NTXN_NEXT > ${mapPlusId.NEXT_TXN_ID}
+    </delete>
 
     <!--NEXT_LOCK_ID-->
     <select id='getNextLockIdRecords' resultType='com.netease.hivetools.meta.NextLockId'>
@@ -199,6 +215,9 @@
             (${mapPlusId.NEXT_LOCK_ID} + #{item.nl_next})
         </foreach>
     </insert>
+    <delete id="rollbackNextLockId" parameterType="java.util.Map">
+        DELETE FROM NEXT_LOCK_ID WHERE NL_NEXT > ${mapPlusId.NEXT_LOCK_ID}
+    </delete>
 
     <!--NEXT_COMPACTION_QUEUE_ID-->
     <select id='getNextCompactionQueueIdRecords' resultType='com.netease.hivetools.meta.NextCompactionQueueId'>
@@ -222,6 +241,9 @@
             (${mapPlusId.NEXT_COMPACTION_QUEUE_ID} + #{item.ncq_next})
         </foreach>
     </insert>
+    <delete id="rollbackNextCompactionQueueId" parameterType="java.util.Map">
+        DELETE FROM NEXT_COMPACTION_QUEUE_ID WHERE NCQ_NEXT > ${mapPlusId.NEXT_COMPACTION_QUEUE_ID}
+    </delete>
 
     <!--HIVE_LOCKS-->
     <select id='getHiveLocksRecords' resultType='com.netease.hivetools.meta.HiveLocks'>
@@ -239,12 +261,15 @@
             SELECT IFNULL(MIN(HL_LOCK_EXT_ID), 0) FROM HIVE_LOCKS
         ]]>
     </select>
-    <insert id="batchHiveLocksKeys" parameterType="java.util.Map">
+    <insert id="batchInsertHiveLocks" parameterType="java.util.Map">
         INSERT INTO HIVE_LOCKS (`HL_LOCK_EXT_ID`,`HL_LOCK_INT_ID`,`HL_TXNID`,`HL_DB`,`HL_TABLE`,`HL_PARTITION`,`HL_LOCK_STATE`,`HL_LOCK_TYPE`,`HL_LAST_HEARTBEAT`,`HL_ACQUIRED_AT`,`HL_USER`,`HL_HOST`) VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (${mapPlusId.HIVE_LOCKS} + #{item.hl_lock_ext_id}, #{item.hl_lock_int_id}, #{item.hl_txnid}, #{item.hl_db}, #{item.hl_table}, #{item.hl_partition}, #{item.hl_lock_state}, #{item.hl_lock_type}, #{item.hl_last_heartbeat}, #{item.hl_acquired_at}, #{item.hl_user}, #{item.hl_host})
         </foreach>
     </insert>
+    <delete id="rollbackHiveLocks" parameterType="java.util.Map">
+        DELETE FROM HIVE_LOCKS WHERE HL_LOCK_EXT_ID > ${mapPlusId.HIVE_LOCKS}
+    </delete>
 
     <!--MASTER_KEYS-->
     <select id='getMasterKeysRecords' resultType='com.netease.hivetools.meta.MasterKeys'>
@@ -268,6 +293,9 @@
             (${mapPlusId.MASTER_KEYS} + #{item.key_id}, #{item.master_key})
         </foreach>
     </insert>
+    <delete id="rollbackMasterKeys" parameterType="java.util.Map">
+        DELETE FROM MASTER_KEYS WHERE KEY_ID > ${mapPlusId.MASTER_KEYS}
+    </delete>
 
     <!--NOTIFICATION_LOG-->
     <select id='getNotificationLogRecords' resultType='com.netease.hivetools.meta.NotificationLog'>
@@ -291,6 +319,9 @@
             (${mapPlusId.NOTIFICATION_LOG} + #{item.nl_id}, #{item.event_id}, #{item.event_time}, #{item.event_type}, #{item.db_name}, #{item.tbl_name}, #{item.message})
         </foreach>
     </insert>
+    <delete id="rollbackNotificationLog" parameterType="java.util.Map">
+        DELETE FROM NOTIFICATION_LOG WHERE NL_ID > ${mapPlusId.NOTIFICATION_LOG}
+    </delete>
 
     <!--NOTIFICATION_SEQUENCE-->
     <select id='getNotificationSequenceRecords' resultType='com.netease.hivetools.meta.NotificationSequence'>
@@ -314,6 +345,9 @@
             (${mapPlusId.NOTIFICATION_SEQUENCE} + #{item.nni_id}, #{item.next_event_id})
         </foreach>
     </insert>
+    <delete id="rollbackNotificationSequence" parameterType="java.util.Map">
+        DELETE FROM NOTIFICATION_SEQUENCE WHERE NNI_ID > ${mapPlusId.NOTIFICATION_SEQUENCE}
+    </delete>
 
     <!--NUCLEUS_TABLES-->
     <select id='getNucleusTablesRecords' resultType='com.netease.hivetools.meta.NucleusTables'>
@@ -337,11 +371,19 @@
             (${mapPlusId.NUCLEUS_TABLES} + #{item.class_name}, #{item.table_name}, #{item.type}, #{item.owner}, #{item.version}, #{item.interface_name})
         </foreach>
     </insert>
+    <delete id="rollbackNucleusTables" parameterType="java.util.Map">
+        DELETE FROM NUCLEUS_TABLES WHERE CLASS_NAME > ${mapPlusId.NUCLEUS_TABLES}
+    </delete>
 
     <!--PARTITIONS-->
     <select id='getPartitionsRecords' resultType='com.netease.hivetools.meta.Partitions'>
         <![CDATA[
             SELECT * FROM PARTITIONS ORDER BY PART_ID
+        ]]>
+    </select>
+    <select id='getPagingPartitionsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Partitions'>
+        <![CDATA[
+            SELECT * FROM PARTITIONS WHERE PART_ID >= ${mapPagindId.startId} AND PART_ID < ${mapPagindId.endId}
         ]]>
     </select>
     <select id="getPartitionsMaxId" resultType="int">
@@ -362,6 +404,9 @@
             ${mapPlusId.SDS} + #{item.sd_id}, ${mapPlusId.TBLS} + #{item.tbl_id}, ${mapPlusId.PARTITIONS} + #{item.link_target_id})
         </foreach>
     </insert>
+    <delete id="rollbackPartitions" parameterType="java.util.Map">
+        DELETE FROM PARTITIONS WHERE PART_ID > ${mapPlusId.PARTITIONS}
+    </delete>
 
     <!--PARTITION_EVENTS-->
     <select id='getPartitionEventsRecords' resultType='com.netease.hivetools.meta.PartitionEvents'>
@@ -385,6 +430,9 @@
             (${mapPlusId.PARTITION_EVENTS} + #{item.part_name_id}, #{item.db_name}, #{item.event_time}, #{item.event_type}, #{item.partition_name}, #{item.tbl_name})
         </foreach>
     </insert>
+    <delete id="rollbackPartitionEvents" parameterType="java.util.Map">
+        DELETE FROM PARTITION_EVENTS WHERE PART_NAME_ID > ${mapPlusId.PARTITION_EVENTS}
+    </delete>
 
     <!--PARTITION_KEYS-->
     <select id='getPartitionKeysRecords' resultType='com.netease.hivetools.meta.PartitionKeys'>
@@ -408,11 +456,19 @@
             (${mapPlusId.TBLS} + #{item.tbl_id}, #{item.pkey_comment}, #{item.pkey_name}, #{item.pkey_type}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackPartitionKeys" parameterType="java.util.Map">
+        DELETE FROM PARTITION_KEYS WHERE TBL_ID > ${mapPlusId.PARTITION_KEYS}
+    </delete>
 
     <!--PARTITION_KEY_VALS-->
     <select id='getPartitionKeyValsRecords' resultType='com.netease.hivetools.meta.PartitionKeyVals'>
         <![CDATA[
             SELECT * FROM PARTITION_KEY_VALS ORDER BY PART_ID, INTEGER_IDX
+        ]]>
+    </select>
+    <select id='getPagingPartitionKeyValsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.PartitionKeyVals'>
+        <![CDATA[
+            SELECT * FROM PARTITION_KEY_VALS WHERE PART_ID >= ${mapPagindId.startId} AND PART_ID < ${mapPagindId.endId}
         ]]>
     </select>
     <select id="getPartitionKeyValsMaxId" resultType="int">
@@ -431,11 +487,19 @@
             (${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.part_key_val}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackPartitionKeyVals" parameterType="java.util.Map">
+        DELETE FROM PARTITION_KEY_VALS WHERE PART_ID > ${mapPlusId.PARTITION_KEY_VALS}
+    </delete>
 
     <!--PARTITION_PARAMS-->
     <select id='getPartitionParamsRecords' resultType='com.netease.hivetools.meta.PartitionParams'>
         <![CDATA[
             SELECT * FROM PARTITION_PARAMS ORDER BY PART_ID, PARAM_KEY
+        ]]>
+    </select>
+    <select id='getPagingPartitionParamsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.PartitionParams'>
+        <![CDATA[
+            SELECT * FROM PARTITION_PARAMS WHERE PART_ID >= ${mapPagindId.startId} AND PART_ID < ${mapPagindId.endId}
         ]]>
     </select>
     <select id="getPartitionParamsMaxId" resultType="int">
@@ -451,9 +515,12 @@
     <insert id="batchInsertPartitionParams" parameterType="java.util.Map">
         INSERT INTO PARTITION_PARAMS (`PART_ID`,`PARAM_KEY`,`PARAM_VALUE`) VALUES
         <foreach collection="list" item="item" index="index" separator=",">
-            (${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.param_key}, #{item.param_value})
+            (${mapPlusId.PARTITION_PARAMS} + #{item.part_id}, #{item.param_key}, #{item.param_value})
         </foreach>
     </insert>
+    <delete id="rollbackPartitionParams" parameterType="java.util.Map">
+        DELETE FROM PARTITION_PARAMS WHERE PART_ID > ${mapPlusId.PARTITION_PARAMS}
+    </delete>
 
     <!--PART_COL_PRIVS-->
     <select id='getPartColPrivsRecords' resultType='com.netease.hivetools.meta.PartColPrivs'>
@@ -481,6 +548,9 @@
             #{item.principal_type}, #{item.part_col_priv})
         </foreach>
     </insert>
+    <delete id="rollbackPartColPrivs" parameterType="java.util.Map">
+        DELETE FROM PART_COL_PRIVS WHERE PART_COLUMN_GRANT_ID > ${mapPlusId.PART_COL_PRIVS}
+    </delete>
 
     <!--PART_COL_STATS-->
     <select id='getPartColStatsRecords' resultType='com.netease.hivetools.meta.PartColStats'>
@@ -510,6 +580,9 @@
             #{item.avg_col_len}, #{item.max_col_len}, #{item.num_trues}, #{item.num_falses}, #{item.last_analyzed})
         </foreach>
     </insert>
+    <delete id="rollbackPartColStats" parameterType="java.util.Map">
+        DELETE FROM PART_COL_STATS WHERE CS_ID > ${mapPlusId.PART_COL_STATS}
+    </delete>
 
     <!--PART_PRIVS-->
     <select id='getPartPrivsRecords' resultType='com.netease.hivetools.meta.PartPrivs'>
@@ -535,6 +608,9 @@
             ${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.principal_name}, #{item.principal_type}, #{item.part_col_priv})
         </foreach>
     </insert>
+    <delete id="rollbackPartPrivs" parameterType="java.util.Map">
+        DELETE FROM PART_PRIVS WHERE PART_GRANT_ID > ${mapPlusId.PART_PRIVS}
+    </delete>
 
     <!--ROLES-->
     <select id='getRolesRecords' resultType='com.netease.hivetools.meta.Roles'>
@@ -567,6 +643,9 @@
             #{item.role_name}
         </foreach>
     </select>
+    <delete id="rollbackRoles" parameterType="java.util.Map">
+        DELETE FROM ROLES WHERE ROLE_ID > ${mapPlusId.ROLES}
+    </delete>
 
     <!--ROLE_MAP-->
     <select id='getRoleMapRecords' resultType='com.netease.hivetools.meta.RoleMap'>
@@ -592,11 +671,19 @@
             #{item.principal_name}, #{item.principal_type}, ${mapPlusId.ROLES} + #{item.role_id})
         </foreach>
     </insert>
+    <delete id="rollbackRoleMap" parameterType="java.util.Map">
+        DELETE FROM ROLE_MAP WHERE ROLE_GRANT_ID > ${mapPlusId.ROLE_MAP}
+    </delete>
 
     <!--SDS-->
     <select id='getSdsRecords' resultType='com.netease.hivetools.meta.Sds'>
         <![CDATA[
             SELECT * FROM SDS ORDER BY SD_ID
+        ]]>
+    </select>
+    <select id='getPagingSdsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Sds'>
+        <![CDATA[
+            SELECT * FROM SDS WHERE SD_ID >= ${mapPagindId.startId} AND SD_ID < ${mapPagindId.endId}
         ]]>
     </select>
     <select id="getSdsMaxId" resultType="int">
@@ -617,6 +704,9 @@
             #{item.location}, #{item.num_buckets}, #{item.output_format}, ${mapPlusId.SERDES} + #{item.serde_id})
         </foreach>
     </insert>
+    <delete id="rollbackSds" parameterType="java.util.Map">
+        DELETE FROM SDS WHERE SD_ID > ${mapPlusId.SDS}
+    </delete>
 
     <!--SD_PARAMS-->
     <select id='getSdParamsRecords' resultType='com.netease.hivetools.meta.SdParams'>
@@ -640,6 +730,9 @@
             (${mapPlusId.SDS} + #{item.sd_id}, #{item.param_key}, #{item.param_value})
         </foreach>
     </insert>
+    <delete id="rollbackSdParams" parameterType="java.util.Map">
+        DELETE FROM SD_PARAMS WHERE SD_ID > ${mapPlusId.SD_PARAMS}
+    </delete>
 
     <!--SEQUENCE_TABLE-->
     <select id='getSequenceTableRecords' resultType='com.netease.hivetools.meta.SequenceTable'>
@@ -664,7 +757,6 @@
         </foreach>
     </insert>
     <update id="batchUpdateSequenceTable" parameterType="java.util.Map">
-
         <foreach collection="list" item="item" index="index" open="" close="" separator=";">
             UPDATE SEQUENCE_TABLE
             <set>
@@ -673,11 +765,19 @@
             where SEQUENCE_NAME = #{item.sequence_name}
         </foreach>
     </update>
+    <delete id="rollbackSequenceTable" parameterType="java.util.Map">
+        SELECT 0 FROM dual
+    </delete>
 
     <!--SERDES-->
     <select id='getSerdesRecords' resultType='com.netease.hivetools.meta.Serdes'>
         <![CDATA[
             SELECT * FROM SERDES ORDER BY SERDE_ID
+        ]]>
+    </select>
+    <select id='getPagingSerdesRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Serdes'>
+        <![CDATA[
+            SELECT * FROM SERDES WHERE SERDE_ID >= ${mapPagindId.startId} AND SERDE_ID < ${mapPagindId.endId}
         ]]>
     </select>
     <select id="getSerdesMaxId" resultType="int">
@@ -696,11 +796,19 @@
             (${mapPlusId.SERDES} + #{item.serde_id}, #{item.name}, #{item.slib})
         </foreach>
     </insert>
+    <delete id="rollbackSerdes" parameterType="java.util.Map">
+        DELETE FROM SERDES WHERE SERDE_ID > ${mapPlusId.SERDES}
+    </delete>
 
     <!--SERDE_PARAMS-->
     <select id='getSerdeParamsRecords' resultType='com.netease.hivetools.meta.SerdeParams'>
         <![CDATA[
             SELECT * FROM SERDE_PARAMS ORDER BY SERDE_ID
+        ]]>
+    </select>
+    <select id='getPagingSerdeParamsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.SerdeParams'>
+        <![CDATA[
+            SELECT * FROM SERDE_PARAMS WHERE SERDE_ID >= ${mapPagindId.startId} AND SERDE_ID < ${mapPagindId.endId}
         ]]>
     </select>
     <select id="getSerdeParamsMaxId" resultType="int">
@@ -719,6 +827,9 @@
             (${mapPlusId.SERDES} + #{item.serde_id}, #{item.param_key}, #{item.param_value})
         </foreach>
     </insert>
+    <delete id="rollbackSerdeParams" parameterType="java.util.Map">
+        DELETE FROM SERDE_PARAMS WHERE SERDE_ID > ${mapPlusId.SERDE_PARAMS}
+    </delete>
 
     <!--SKEWED_COL_NAMES-->
     <select id='getSkewedColNamesRecords' resultType='com.netease.hivetools.meta.SkewedColNames'>
@@ -742,6 +853,9 @@
             (${mapPlusId.SDS} + #{item.sd_id}, #{item.skewed_col_name}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackSkewedColNames" parameterType="java.util.Map">
+        DELETE FROM SKEWED_COL_NAMES WHERE SD_ID > ${mapPlusId.SKEWED_COL_NAMES}
+    </delete>
 
     <!--SKEWED_COL_VALUE_LOC_MAP-->
     <select id='getSkewedColValueLocMapRecords' resultType='com.netease.hivetools.meta.SkewedColValueLocMap'>
@@ -765,6 +879,9 @@
             (${mapPlusId.SDS} + #{item.sd_id}, ${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id_kid}, #{item.location})
         </foreach>
     </insert>
+    <delete id="rollbackSkewedColValueLocMap" parameterType="java.util.Map">
+        DELETE FROM SKEWED_COL_VALUE_LOC_MAP WHERE SD_ID > ${mapPlusId.SKEWED_COL_VALUE_LOC_MAP}
+    </delete>
 
     <!--FUNCS-->
     <select id='getFuncsRecords' resultType='com.netease.hivetools.meta.Funcs'>
@@ -790,6 +907,9 @@
             #{item.func_type}, #{item.owner_name}, #{item.owner_type})
         </foreach>
     </insert>
+    <delete id="rollbackFuncs" parameterType="java.util.Map">
+        DELETE FROM FUNCS WHERE FUNC_ID > ${mapPlusId.FUNCS}
+    </delete>
 
     <!--FUNC_RU-->
     <select id='getFuncRuRecords' resultType='com.netease.hivetools.meta.FuncRu'>
@@ -813,6 +933,9 @@
             (${mapPlusId.FUNC} + #{item.func_id}, #{item.resource_type}, #{item.resource_uri}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackFuncRu" parameterType="java.util.Map">
+        DELETE FROM FUNC_RU WHERE FUNC_ID > ${mapPlusId.FUNC_RU}
+    </delete>
 
     <!--IDXS-->
     <select id='getIdxsRecords' resultType='com.netease.hivetools.meta.Idxs'>
@@ -838,6 +961,9 @@
             ${mapPlusId.TBLS} + #{item.index_tbl_id}, #{item.last_access_time}, ${mapPlusId.TBLS} + #{item.orig_tbl_id}, ${mapPlusId.SDS} + #{item.sd_id})
         </foreach>
     </insert>
+    <delete id="rollbackIdxs" parameterType="java.util.Map">
+        DELETE FROM IDXS WHERE INDEX_ID > ${mapPlusId.IDXS}
+    </delete>
 
     <!--INDEX_PARAMS-->
     <select id='getIndexParamsRecords' resultType='com.netease.hivetools.meta.IndexParams'>
@@ -861,6 +987,9 @@
             (${mapPlusId.IDXS} + #{item.index_id}, #{item.param_key}, #{item.param_value})
         </foreach>
     </insert>
+    <delete id="rollbackIndexParams" parameterType="java.util.Map">
+        DELETE FROM INDEX_PARAMS WHERE INDEX_ID > ${mapPlusId.INDEX_PARAMS}
+    </delete>
 
     <!--SKEWED_STRING_LIST-->
     <select id='getSkewedStringListRecords' resultType='com.netease.hivetools.meta.SkewedStringList'>
@@ -884,6 +1013,9 @@
             (${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id})
         </foreach>
     </insert>
+    <delete id="rollbackSkewedStringList" parameterType="java.util.Map">
+        DELETE FROM SKEWED_STRING_LIST WHERE STRING_LIST_ID > ${mapPlusId.SKEWED_STRING_LIST}
+    </delete>
 
     <!--SKEWED_STRING_LIST_VALUES-->
     <select id='getSkewedStringListValuesRecords' resultType='com.netease.hivetools.meta.SkewedStringListValues'>
@@ -907,6 +1039,9 @@
             (${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id}, #{item.string_list_value}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackSkewedStringListValues" parameterType="java.util.Map">
+        DELETE FROM SKEWED_STRING_LIST_VALUES WHERE STRING_LIST_ID > ${mapPlusId.SKEWED_STRING_LIST_VALUES}
+    </delete>
 
     <!--SKEWED_VALUES-->
     <select id='getSkewedValuesRecords' resultType='com.netease.hivetools.meta.SkewedValues'>
@@ -930,6 +1065,9 @@
             (${mapPlusId.SDS} + #{item.sd_id_oid}, ${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id_eid}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackSkewedValues" parameterType="java.util.Map">
+        DELETE FROM SKEWED_VALUES WHERE SD_ID_OID > ${mapPlusId.SKEWED_VALUES}
+    </delete>
 
     <!--SORT_COLS-->
     <select id='getSortColsRecords' resultType='com.netease.hivetools.meta.SortCols'>
@@ -953,6 +1091,9 @@
             (${mapPlusId.SDS} + #{item.sd_id}, #{item.column_name}, #{item.order}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackSortCols" parameterType="java.util.Map">
+        DELETE FROM SORT_COLS WHERE SD_ID > ${mapPlusId.SORT_COLS}
+    </delete>
 
     <!--TABLE_PARAMS-->
     <select id='getTableParamsRecords' resultType='com.netease.hivetools.meta.TableParams'>
@@ -976,6 +1117,9 @@
             (${mapPlusId.TBLS} + #{item.tbl_id}, #{item.param_key}, #{item.param_value})
         </foreach>
     </insert>
+    <delete id="rollbackTableParams" parameterType="java.util.Map">
+        DELETE FROM TABLE_PARAMS WHERE TBL_ID > ${mapPlusId.TABLE_PARAMS}
+    </delete>
 
     <!--TAB_COL_STATS-->
     <select id='getTabColStatsRecords' resultType='com.netease.hivetools.meta.TabColStats'>
@@ -1005,6 +1149,9 @@
             #{item.max_col_len}, #{item.num_trues}, #{item.num_falses}, #{item.last_analyzed})
         </foreach>
     </insert>
+    <delete id="rollbackTabColStats" parameterType="java.util.Map">
+        DELETE FROM TAB_COL_STATS WHERE CS_ID > ${mapPlusId.TAB_COL_STATS}
+    </delete>
 
     <!--TBLS-->
     <select id='getTblsRecords' resultType='com.netease.hivetools.meta.Tbls'>
@@ -1038,6 +1185,9 @@
             </if>
         </foreach>
     </insert>
+    <delete id="rollbackTbls" parameterType="java.util.Map">
+        DELETE FROM TBLS WHERE TBL_ID > ${mapPlusId.TBLS}
+    </delete>
 
     <!--TBL_COL_PRIVS-->
     <select id='getTblColPrivsRecords' resultType='com.netease.hivetools.meta.TblColPrivs'>
@@ -1063,6 +1213,9 @@
             #{item.grantor_type}, #{item.principal_name}, #{item.principal_type}, #{item.tbl_col_priv}, ${mapPlusId.TBLS} + #{item.tbl_id})
         </foreach>
     </insert>
+    <delete id="rollbackTblColPrivs" parameterType="java.util.Map">
+        DELETE FROM TBL_COL_PRIVS WHERE TBL_COLUMN_GRANT_ID > ${mapPlusId.TBL_COL_PRIVS}
+    </delete>
 
     <!--TBL_PRIVS-->
     <select id='getTblPrivsRecords' resultType='com.netease.hivetools.meta.TblPrivs'>
@@ -1088,6 +1241,9 @@
             #{item.principal_name}, #{item.principal_type}, #{item.tbl_priv}, ${mapPlusId.TBLS} + #{item.tbl_id})
         </foreach>
     </insert>
+    <delete id="rollbackTblPrivs" parameterType="java.util.Map">
+        DELETE FROM TBL_PRIVS WHERE TBL_GRANT_ID > ${mapPlusId.TBL_PRIVS}
+    </delete>
 
     <!--TXNS-->
     <select id='getTxnsRecords' resultType='com.netease.hivetools.meta.Txns'>
@@ -1105,7 +1261,7 @@
             SELECT IFNULL(MIN(TXN_ID), 0) FROM TXNS
         ]]>
     </select>
-    <insert id="batchInsert" parameterType="java.util.Map">
+    <insert id="batchInsertTxns" parameterType="java.util.Map">
         INSERT INTO TXNS (`TXN_ID`,`TXN_STATE`,`TXN_STARTED`,`TXN_LAST_HEARTBEAT`,`TXN_USER`,
         `TXN_HOST`) VALUES
         <foreach collection="list" item="item" index="index" separator=",">
@@ -1113,6 +1269,9 @@
             #{item.txn_host})
         </foreach>
     </insert>
+    <delete id="rollbackTxns" parameterType="java.util.Map">
+        DELETE FROM TXNS WHERE TXN_ID > ${mapPlusId.TXNS}
+    </delete>
 
     <!--TXN_COMPONENTS-->
     <select id='getTxnComponentsRecords' resultType='com.netease.hivetools.meta.TxnComponents'>
@@ -1136,6 +1295,9 @@
             (${mapPlusId.TXNS} + #{item.TC_TXNID}, #{item.TC_DATABASE}, #{item.TC_TABLE}, #{item.TC_PARTITION})
         </foreach>
     </insert>
+    <delete id="rollbackTxnComponents" parameterType="java.util.Map">
+        DELETE FROM TXN_COMPONENTS WHERE TC_TXNID > ${mapPlusId.TXN_COMPONENTS}
+    </delete>
 
     <!--TYPES-->
     <select id='getTypesRecords' resultType='com.netease.hivetools.meta.Types'>
@@ -1165,6 +1327,9 @@
             #{item.type_name}
         </foreach>
     </select>
+    <delete id="rollbackTypes" parameterType="java.util.Map">
+        DELETE FROM TYPES WHERE TYPES_ID > ${mapPlusId.TYPES}
+    </delete>
 
     <!--TYPE_FIELDS-->
     <select id='getTypeFieldsRecords' resultType='com.netease.hivetools.meta.TypeFields'>
@@ -1188,6 +1353,9 @@
             (${mapPlusId.TYPES} + #{item.type_name}, #{item.comment}, #{item.field_name}, #{item.field_type}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackTypeFields" parameterType="java.util.Map">
+        DELETE FROM TYPE_FIELDS WHERE TYPE_NAME > ${mapPlusId.TYPE_FIELDS}
+    </delete>
 
     <!--BUCKETING_COLS-->
     <select id='getBucketingColsRecords' resultType='com.netease.hivetools.meta.BucketingCols'>
@@ -1211,6 +1379,9 @@
             (${mapPlusId.SDS} + #{item.sd_id}, #{item.bucket_col_name}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackBucketingCols" parameterType="java.util.Map">
+        DELETE FROM BUCKETING_COLS WHERE SD_ID > ${mapPlusId.BUCKETING_COLS}
+    </delete>
 
     <!--COLUMNS_V2-->
     <select id='getColumnsV2Records' resultType='com.netease.hivetools.meta.ColumnsV2'>
@@ -1234,6 +1405,9 @@
             (${mapPlusId.CDS} + #{item.cd_id}, #{item.comment}, #{item.column_name}, #{item.type_name}, #{item.integer_idx})
         </foreach>
     </insert>
+    <delete id="rollbackColumnsV2" parameterType="java.util.Map">
+        DELETE FROM COLUMNS_V2 WHERE CD_ID > ${mapPlusId.COLUMNS_V2}
+    </delete>
 
     <!--DATABASE_PARAMS-->
     <select id='getDatabaseParamsRecords' resultType='com.netease.hivetools.meta.DatabaseParams'>
@@ -1257,6 +1431,9 @@
             (${mapPlusId.DBS} + #{item.db_id}, #{item.param_key}, #{item.param_value})
         </foreach>
     </insert>
+    <delete id="rollbackDatabaseParams" parameterType="java.util.Map">
+        DELETE FROM DATABASE_PARAMS WHERE DB_ID > ${mapPlusId.DATABASE_PARAMS}
+    </delete>
 
     <!--DB_PRIVS-->
     <select id='getDbPrivsRecords' resultType='com.netease.hivetools.meta.DbPrivs'>
@@ -1282,6 +1459,9 @@
             #{item.grantor_type}, #{item.principal_name}, #{item.principal_type}, #{item.db_priv})
         </foreach>
     </insert>
+    <delete id="rollbackDbPrivs" parameterType="java.util.Map">
+        DELETE FROM DB_PRIVS WHERE DB_GRANT_ID > ${mapPlusId.DB_PRIVS}
+    </delete>
 
     <!--VERSION-->
     <select id='getVersionRecords' resultType='com.netease.hivetools.meta.Version'>
@@ -1295,4 +1475,7 @@
             #{item.schema_version}
         </foreach>
     </select>
+    <delete id="rollbackVersion" parameterType="java.util.Map">
+        SELECT 0 FROM dual
+    </delete>
 </mapper>

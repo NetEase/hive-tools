@@ -1,6 +1,7 @@
 package com.netease.hivetools.mappers;
 
 import com.netease.hivetools.apps.SchemaToMetaBean;
+import com.netease.hivetools.meta.SerdeParams;
 import com.netease.hivetools.service.MyBatisUtil;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.log4j.Logger;
@@ -33,6 +34,24 @@ public class MetaDataMapper {
       tabName = SchemaToMetaBean.formatTableColumnName(tabName, true);
       String statement = "com.netease.hivetools.mappers.MetaDataMapper.get" + tabName + "Records";
       list = sqlSession.selectList(statement);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.getMessage());
+    } finally {
+      sqlSession.close();
+    }
+    return list;
+  }
+
+  public List<Object> getPagingTableRecords(String tabName, HashMap<String, Object> mapPagindId) {
+    List<Object> list = null;
+    SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
+    try {
+      tabName = SchemaToMetaBean.formatTableColumnName(tabName, true);
+      String statement = "com.netease.hivetools.mappers.MetaDataMapper.getPaging" + tabName + "Records";
+      Map<String, Object> params = new HashMap<String,Object>();
+      params.put("mapPagindId", mapPagindId);
+      list = sqlSession.selectList(statement, params);
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e.getMessage());
@@ -79,6 +98,7 @@ public class MetaDataMapper {
   public int batchInsert(String tabName, List<Object> list, HashMap<String, Object> mapPlusId) {
     int numInsert = 0;
     SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
+    List<Object> tmpSubList = null;
     try {
       String tableName = SchemaToMetaBean.formatTableColumnName(tabName, true);
       logger.info("批量插入表 " + tabName + " plusId = " + mapPlusId.get(tabName));
@@ -94,16 +114,26 @@ public class MetaDataMapper {
         params.put("mapPlusId", mapPlusId);
         params.put("list",  subList);
 
+        tmpSubList = subList;
+
         String statement = "com.netease.hivetools.mappers.MetaDataMapper.batchInsert" + tableName;
-        numInsert = sqlSession.insert(statement, params);
+        numInsert += sqlSession.insert(statement, params);
         int progress = ((index++ + 1)*100 / splitList.size());
         logger.info("批量插入表 " + tabName + " 处理进度 [" + progress +"%]");
+        sqlSession.commit();
       }
       logger.info("批量插入表 " + tabName + " 记录总数 [" + list.size()+"]");
-      sqlSession.commit();
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e.getMessage());
+
+      for (Object object : tmpSubList) {
+        if (object.getClass() == SerdeParams.class) {
+          SerdeParams serdeParams = (SerdeParams)object;
+          logger.error("SerdeId=" + serdeParams.getSerdeId() + ", ParamKey=" + serdeParams.getParamKey() + ", ParamValue=" + serdeParams.getParamValue());
+        }
+      }
+
       sqlSession.rollback();
       numInsert = -1;
     } finally {
@@ -111,6 +141,31 @@ public class MetaDataMapper {
     }
 
     return numInsert;
+  }
+
+  public int rollback(String tabName, HashMap<String, Object> mapPlusId) {
+    int numRollback = 0;
+    SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
+    try {
+      String tableName = SchemaToMetaBean.formatTableColumnName(tabName, true);
+      logger.info("回滚元数据表 " + tabName + " plusId = " + mapPlusId.get(tabName));
+
+      String statement = "com.netease.hivetools.mappers.MetaDataMapper.rollback" + tableName;
+      Map<String, Object> params = new HashMap<String,Object>();
+      params.put("mapPlusId", mapPlusId);
+      numRollback = sqlSession.delete(statement, params);
+      logger.info("回滚元数据表 " + tabName + " 记录总数 [" + numRollback+"]");
+      sqlSession.commit();
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.getMessage());
+      sqlSession.rollback();
+      numRollback = -1;
+    } finally {
+      sqlSession.close();
+    }
+
+    return numRollback;
   }
 
   public List<Object> checkUniqueKey(String tabName, List<Object> list) {

@@ -8,17 +8,26 @@ import com.google.common.collect.Multiset;
 import com.netease.hivetools.apps.Mammut;
 import com.netease.hivetools.apps.MetaDataMerge;
 import com.netease.hivetools.apps.SchemaToMetaBean;
+import com.netease.hivetools.mappers.MetaDataMapper;
 import org.apache.commons.cli.*;
+import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
 import java.io.*;
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
 import java.util.Collection;
 import java.util.HashMap;
 
 public class Main {
+  private static final Logger logger = Logger.getLogger(Main.class.getName());
+
   public static void main(String[] args) {
-    System.exit(1);
     PropertyConfigurator.configure("log4j.properties");
+
+//    test(args);
     cliCommond(args);
   }
 
@@ -76,6 +85,31 @@ public class Main {
       HelpFormatter hf = new HelpFormatter();
       hf.printHelp(formatstr, "", opt, "");
       System.exit(1);
+    }
+  }
+
+  public static void test(String[] args)
+  {
+    System.out.println("test string=" + "walmart öbama 👽💔");
+    String url = "jdbc:mysql://10.120.232.16:3306/haitao1201?useUnicode=true&characterEncoding=UTF-8";
+    try
+    {
+      Class.forName("com.mysql.jdbc.Driver").newInstance();
+      Connection c = DriverManager.getConnection(url, "haitao1201", "haitao1201");
+      PreparedStatement p = c.prepareStatement("select * from PARTITION_PARAMS where PART_ID>= 130000 and PART_ID < 140000;");
+      p.execute();
+      ResultSet rs = p.getResultSet();
+      while (!rs.isLast())
+      {
+        rs.next();
+        String retrieved = rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3);
+        logger.info("retrieved=\"" + retrieved + "\"");
+
+      }
+    }
+    catch (Exception e)
+    {
+      e.printStackTrace();
     }
   }
 

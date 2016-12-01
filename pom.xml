@@ -21,7 +21,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>com.netease</groupId>
   <artifactId>hive-tools</artifactId>
-  <version>0.1</version>
+  <version>0.1.0</version>
   <properties>
     <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
@@ -38,7 +38,7 @@
     <mybatis.version>3.2.8</mybatis.version>
     <codemodel.version>2.6</codemodel.version>
     <druid.version>1.0.19</druid.version>
-    <mysql-connector-java.version>5.1.31</mysql-connector-java.version>
+    <mysql-connector-java.version>5.1.39</mysql-connector-java.version>
     <junit.version>3.8.1</junit.version>
 
     <PermGen>64m</PermGen>

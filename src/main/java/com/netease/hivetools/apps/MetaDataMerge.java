@@ -8,6 +8,7 @@ import com.netease.hivetools.meta.Version;
 import com.netease.hivetools.service.MyBatisUtil;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
 import org.apache.log4j.PropertyConfigurator;
 
 import java.util.*;
@@ -35,6 +36,7 @@ public class MetaDataMerge {
 
 		List<String> tables = new ArrayList<String>();
 		HashMap<String, Object> mapPlusId = new HashMap<String, Object>();
+		HashMap<String, Object> pagingProc = new HashMap<String, Object>();
 
 		// no constraint
 		tables.add("DBS");
@@ -94,13 +96,20 @@ public class MetaDataMerge {
 		tables.add("SEQUENCE_TABLE");
 		*/
 
+		pagingProc.put("PARTITIONS", "");
+		pagingProc.put("PARTITION_PARAMS", "");
+		pagingProc.put("PARTITION_KEY_VALS", "");
+		pagingProc.put("SDS", "");
+		pagingProc.put("SERDES", "");
+		pagingProc.put("SERDE_PARAMS", "");
+
 		boolean conflict = checkConflict();
 		checkHdfsCluster();
 
 		Scanner sc = new Scanner(System.in);
 		String useInput = "";
 		while (!useInput.equals("Y")) {
-			System.out.print("进行合并数据源操作请输入[Y],退出系统请输入[n] : ");
+			System.out.print("将元数据 " + MyBatisUtil.sourceName + " 合并到 " + MyBatisUtil.destName + " 操作请输入[Y/n] : ");
 
 			useInput = sc.nextLine();
 			if (useInput.equalsIgnoreCase("n")) {
@@ -108,28 +117,83 @@ public class MetaDataMerge {
 			}
 		}
 
+		boolean mergeSuccess = true;
+		outer_loop:
 		for (String tabName :tables) {
 			logger.info("将 " + MyBatisUtil.sourceName + "." + tabName + " 合并到 " + MyBatisUtil.destName + "." + tabName);
-			int maxDestId = destMetaData.getTableMaxId(tabName);
+			int destMaxDestId = destMetaData.getTableMaxId(tabName);
+			int sourceMaxDestId = sourceMetaData.getTableMaxId(tabName);
+
+			logger.info(">>> (开始分页处理) [数据源:" + MyBatisUtil.destName +"].[表:" + tabName + "] 中 maxId = " + sourceMaxDestId + ".");
 
 			mapPlusId.put("sourceName", MyBatisUtil.sourceName);
 			mapPlusId.put("destName", MyBatisUtil.destName);
-			mapPlusId.put(tabName, maxDestId);
-			List<Object> listRecords = (List)sourceMetaData.getTableRecords(tabName);
-			int numResult = destMetaData.batchInsert(tabName, listRecords, mapPlusId);
-			if (numResult < 0) {
-				logger.error("合并 " + MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 失败!");
-				logger.error("============= " + MyBatisUtil.sourceName + " 表ID跳号信息 =============");
-				logger.error(mapPlusId);
-				logger.error("========================================================");
-				System.exit(1);
+			mapPlusId.put(tabName, destMaxDestId);
+
+			if (pagingProc.containsKey(tabName)) {
+				HashMap<String, Object> mapPagindId = new HashMap<String, Object>();
+				int totalCount = 0;
+				int paging = (sourceMaxDestId/10000 + 1);
+				logger.error("paging = " + paging);
+				for (int index = 0; index <= paging; index ++) {
+					int startId = index * 10000;
+					int endId = (index + 1) * 10000;
+					mapPagindId.put("startId", startId);
+					mapPagindId.put("endId", endId);
+
+					logger.info("(分页处理"+index+") 从[数据源:" + MyBatisUtil.sourceName +"].[表:" + tabName + "] 中, 获取startId>= " + startId + ", endId < " + endId + " 的数据.");
+					List<Object> listRecords = (List)sourceMetaData.getPagingTableRecords(tabName, mapPagindId);
+					logger.info("(分页处理"+index+") 从[数据源:" + MyBatisUtil.sourceName +"].[表:" + tabName + "] 中, 获取到 " + listRecords.size() + " 条记录.");
+					int numResult = destMetaData.batchInsert(tabName, listRecords, mapPlusId);
+					if (numResult < 0) {
+						logger.error("跳出分页处理循环");
+						mergeSuccess = false;
+						break outer_loop; // 跳出分页处理循环
+					}
+					totalCount += numResult;
+				}
+				logger.info("<<< (结束分页处理) 累计插入到[数据源:" + MyBatisUtil.destName +"].[表:" + tabName + "] 中 " + totalCount + " 条记录.");
+			} else {
+				List<Object> listRecords = (List)sourceMetaData.getTableRecords(tabName);
+				logger.info("从[数据源:" + MyBatisUtil.sourceName +"].[表:" + tabName + "] 中, 获取到 " + listRecords.size() + " 条记录.");
+				int numResult = destMetaData.batchInsert(tabName, listRecords, mapPlusId);
+				if (numResult < 0) {
+					mergeSuccess = false;
+					break;
+				}
+				logger.info("插入到[数据源:" + MyBatisUtil.destName +"].[表:" + tabName + "] 中 " + numResult + " 条记录.");
 			}
 		}
 
-		logger.info("合并 "+ MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 成功!");
-		logger.info("============= " + MyBatisUtil.sourceName + " 表ID跳号信息 =============");
-		logger.info(mapPlusId);
-		logger.info("========================================================");
+		if (true == mergeSuccess) {
+			logger.info("合并 "+ MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 成功! [√]");
+			logger.info("[数据源:" + MyBatisUtil.destName + "].[表:DBS]中数据库名称全部进行了自动调整,请根据需要手工修改.");
+			logger.info("SELECT * FROM DBS WHERE NAME LIKE '" + MyBatisUtil.sourceName + "%'");
+			logger.info("UPDATE DBS SET NAME = ? WHERE DB_ID = ?");
+			logger.info("============= " + MyBatisUtil.sourceName + " 表ID跳号信息 =============");
+			logger.info(mapPlusId);
+			logger.info("========================================================");
+		} else {
+			logger.error("合并 " + MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 失败! [×]");
+			logger.error("============= " + MyBatisUtil.sourceName + " 表ID跳号信息 =============");
+			logger.error(mapPlusId);
+			logger.error("========================================================");
+		}
+
+		String useInput2 = "";
+		while (!useInput2.equals("Y")) {
+			if (true == mergeSuccess) {
+				System.out.print("合并 "+ MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 成功[√], 是否回滚本次合并操作[Y/n] : ");
+			} else {
+				System.out.print("合并 "+ MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 失败!![×] 必须回滚本次合并操作[Y/n] : ");
+			}
+			useInput2 = sc.nextLine();
+			if (useInput2.equalsIgnoreCase("n")) {
+				System.exit(1);
+			} else if (useInput2.equals("Y")) {
+				rollback(tables, mapPlusId);
+			}
+		}
 	}
 
 	static private void cliCommond(String[] args) {
@@ -188,51 +252,76 @@ public class MetaDataMerge {
 		}
 	}
 
+	static private void rollback(List<String> tables, HashMap<String, Object> mapPlusId) {
+		MetaDataMapper destMetaData = new MetaDataMapper(MyBatisUtil.destName);
+
+		for (int n = tables.size()-1; n >= 0; n --) {
+			String tableName = tables.get(n);
+			if (false == mapPlusId.containsKey(tableName)) {
+				logger.error("回滚元数据表 " + tableName + " 参数错误! [×]");
+			}
+			int numRollback = destMetaData.rollback(tableName, mapPlusId);
+			if (numRollback < 0) {
+				logger.error("回滚元数据表 " + tableName + " 失败! [×]");
+				System.exit(1);
+			}
+		}
+		logger.error("回滚元数据表成功! [√]");
+		logger.info("========================================================");
+	}
+
 	static private boolean checkConflict() {
 		MetaDataMapper sourceMetaData = new MetaDataMapper(MyBatisUtil.sourceName);
 		MetaDataMapper destMetaData = new MetaDataMapper(MyBatisUtil.destName);
 
 		boolean conflict = false;
 
-		List<String> tables = new ArrayList<String>();
-		tables.add("VERSION");
-		tables.add("DBS");
-		tables.add("TYPES");
+		List<String> dbs = new ArrayList<String>();
+		dbs.add("VERSION");
+		dbs.add("DBS");
+		dbs.add("TYPES");
 
 		/* not check Conflict
 		tables.add("ROLES");
 		*/
 
-		for (String tabName :tables) {
-			logger.info(">>> 检查 [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + tabName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + tabName + "] 数据是否存在冲突?");
+		for (String dbName :dbs) {
+			logger.info(">>> 检查 [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + dbName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + dbName + "] 数据是否存在冲突?");
 
-			List<Object> listRecords = (List) sourceMetaData.getTableRecords(tabName);
-			List<Object> listUniqueKey = destMetaData.checkUniqueKey(tabName, listRecords);
+			List<Object> listRecords = (List) sourceMetaData.getTableRecords(dbName);
+			if (dbName.equalsIgnoreCase("DBS")) {
+				// 生成新的数据库名称
+				for(Object object : listRecords){
+					String newDbName = MyBatisUtil.sourceName + "_" +  ((Dbs) object).getName();
+					((Dbs) object).setName(newDbName);
+				}
+			}
+			List<Object> listUniqueKey = destMetaData.checkUniqueKey(dbName, listRecords);
 			if (listUniqueKey.size() > 0) {
 				conflict = true;
 				for(Object object : listUniqueKey){
 					if (object instanceof Dbs) {
-						logger.error("数据库名 " + ((Dbs) object).getName() + " 在2个数据源中同时存在! 存在数据冲突!!!");
+						logger.error("数据库名 " + ((Dbs) object).getName() + " 在2个数据源中同时存在! 存在数据冲突!!! [×]");
 					} else if (object instanceof Version) {
-						logger.error("2个数据源的元数据版本号 " + ((Version) object).getSchemaVersion() + " 不一致!");
+						logger.error("2个数据源的元数据版本号 " + ((Version) object).getSchemaVersion() + " 不一致! [×]");
 					} else if (object instanceof Roles) {
-						logger.error(((Roles) object).getRoleName() + " 冲突!!!");
+						logger.error(((Roles) object).getRoleName() + " 冲突!!! [×]");
 					} else if (object instanceof Types) {
-						logger.error(((Types) object).getTypeName() + " 冲突!!!");
+						logger.error(((Types) object).getTypeName() + " 冲突!!! [×]");
 					} else {
-						logger.error(object + " 冲突!!!");
+						logger.error(object + " 冲突!!! [×]");
 					}
 				}
 			} else {
-				logger.info("<<< [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + tabName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + tabName + "] 不存在冲突.");
+				logger.info("<<< [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + dbName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + dbName + "] 不存在冲突. [√]");
 			}
 		}
 
 		if (conflict == true) {
-			logger.error("检查完毕 [数据源:" + MyBatisUtil.sourceName + "] 和 [数据源:" + MyBatisUtil.destName + "] 存在数据冲突! 程序退出!!");
+			logger.error("检查完毕 [数据源:" + MyBatisUtil.sourceName + "] 和 [数据源:" + MyBatisUtil.destName + "] 存在数据冲突! 程序退出!! [×]");
 			System.exit(1);
 		} else {
-			logger.info("检查完毕 [数据源:" + MyBatisUtil.sourceName + "] 和 [数据源:" + MyBatisUtil.destName + "] 没有数据冲突.");
+			logger.info("检查完毕 [数据源:" + MyBatisUtil.sourceName + "] 和 [数据源:" + MyBatisUtil.destName + "] 没有数据冲突. [√]");
 		}
 
 		return conflict;
@@ -278,20 +367,20 @@ public class MetaDataMerge {
 					}
 
 					logger.error("[数据源:" + MyBatisUtil.sourceName + "].[ClusterId:" + sbSourceHdfs.toString() + "] 不等于 [数据源:"
-							+ MyBatisUtil.destName + "].[ClusterId:" + hdfsCluster + "]");
+							+ MyBatisUtil.destName + "].[ClusterId:" + hdfsCluster + "] [×]");
 					differentCluster = true;
 				}
 			} else {
-				logger.error("[数据源:" + MyBatisUtil.destName + "] DBS.DbLocationUri : " + ((Dbs)object).getDbLocationUri() + " 错误!");
+				logger.error("[数据源:" + MyBatisUtil.destName + "] DBS.DbLocationUri : " + ((Dbs)object).getDbLocationUri() + " 错误! [×]");
 				System.exit(1);
 			}
 		}
 
 		if (differentCluster == true) {
-			logger.error("<<< [数据源:" + MyBatisUtil.sourceName+"] HDFS ClusterID 与 [数据源:"+MyBatisUtil.destName+"] 不同! 程序退出!!");
+			logger.error("<<< [数据源:" + MyBatisUtil.sourceName+"] HDFS ClusterID 与 [数据源:"+MyBatisUtil.destName+"] 不同! 程序退出!! [×]");
 			System.exit(1);
 		} else {
-			logger.info("<<< [数据源:" + MyBatisUtil.sourceName+"] HDFS ClusterID 与 [数据源:"+MyBatisUtil.destName+"] 相同.");
+			logger.info("<<< [数据源:" + MyBatisUtil.sourceName+"] HDFS ClusterID 与 [数据源:"+MyBatisUtil.destName+"] 相同. [√]");
 		}
 	}
 }
