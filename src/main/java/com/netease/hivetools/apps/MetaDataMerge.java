@@ -154,7 +154,7 @@ public class MetaDataMerge {
 				}
 				logger.info("<<< (结束分页处理) 累计插入到[数据源:" + MyBatisUtil.destName +"].[表:" + tabName + "] 中 " + totalCount + " 条记录.");
 			} else {
-				List<Object> listRecords = (List)sourceMetaData.getTableRecords(tabName);
+				List<Object> listRecords = (List)sourceMetaData.getTableRecords(tabName, null);
 				logger.info("从[数据源:" + MyBatisUtil.sourceName +"].[表:" + tabName + "] 中, 获取到 " + listRecords.size() + " 条记录.");
 				int numResult = destMetaData.batchInsert(tabName, listRecords, mapPlusId);
 				if (numResult < 0) {
@@ -180,6 +180,7 @@ public class MetaDataMerge {
 			logger.error("========================================================");
 		}
 
+		/*
 		String useInput2 = "";
 		while (!useInput2.equals("Y")) {
 			if (true == mergeSuccess) {
@@ -193,7 +194,7 @@ public class MetaDataMerge {
 			} else if (useInput2.equals("Y")) {
 				rollback(tables, mapPlusId);
 			}
-		}
+		}*/
 	}
 
 	static private void cliCommond(String[] args) {
@@ -288,7 +289,7 @@ public class MetaDataMerge {
 		for (String dbName :dbs) {
 			logger.info(">>> 检查 [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + dbName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + dbName + "] 数据是否存在冲突?");
 
-			List<Object> listRecords = (List) sourceMetaData.getTableRecords(dbName);
+			List<Object> listRecords = (List) sourceMetaData.getTableRecords(dbName, null);
 			if (dbName.equalsIgnoreCase("DBS")) {
 				// 生成新的数据库名称
 				for(Object object : listRecords){
@@ -333,8 +334,8 @@ public class MetaDataMerge {
 
 		logger.info(">>> 检查 [数据源:" + MyBatisUtil.sourceName+"] HDFS ClusterID 与 [数据源:"+MyBatisUtil.destName+"] 是否相同?");
 
-		List<Object> sourceDbs = (List) sourceMetaData.getTableRecords("DBS");
-		List<Object> destDbs = (List) destMetaData.getTableRecords("DBS");
+		List<Object> sourceDbs = (List) sourceMetaData.getTableRecords("DBS", null);
+		List<Object> destDbs = (List) destMetaData.getTableRecords("DBS", null);
 
 		boolean differentCluster = false;
 

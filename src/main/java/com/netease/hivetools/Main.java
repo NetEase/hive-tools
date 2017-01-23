@@ -1,25 +1,18 @@
 package com.netease.hivetools;
 
 
-import com.google.common.collect.ArrayListMultimap;
-import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Multimap;
-import com.google.common.collect.Multiset;
+import com.netease.hivetools.apps.DelMetaData;
 import com.netease.hivetools.apps.Mammut;
 import com.netease.hivetools.apps.MetaDataMerge;
 import com.netease.hivetools.apps.SchemaToMetaBean;
-import com.netease.hivetools.mappers.MetaDataMapper;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
 
-import java.io.*;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
-import java.util.Collection;
-import java.util.HashMap;
 
 public class Main {
   private static final Logger logger = Logger.getLogger(Main.class.getName());
@@ -38,24 +31,17 @@ public class Main {
         .withValueSeparator('=')
         .hasArg()
         .create());
-    opt.addOption(OptionBuilder.withLongOpt("s")
-        .withDescription("迁出的元数据库")
-        .withValueSeparator('=')
-        .hasArg()
-        .create());
-    opt.addOption(OptionBuilder.withLongOpt("d")
-        .withDescription("迁入的元数据库")
-        .withValueSeparator('=')
-        .hasArg()
-        .create());
     opt.addOption("h", "help",  false, "打印命令行帮助");
 
-    String formatstr = "hive-tools --p=[MetaDataMerge|SchemaToMetaBean|Mammut] --s=<source-name> --d=<dest-name> [-h/--help]";
+    String formatstr = "hive-tools --p=[MetaDataMerge|SchemaToMetaBean|Mammut|DelMetaData] [-h/--help]";
 
     HelpFormatter formatter = new HelpFormatter();
     CommandLineParser parser = new PosixParser();
     CommandLine cl = null;
     try {
+      for (int i = 0; i < args.length; i ++)
+        logger.debug("args[" +i +"] : " + args[i]);
+
       cl = parser.parse(opt, args);
     } catch (ParseException e) {
       formatter.printHelp(formatstr, opt);
@@ -80,6 +66,8 @@ public class Main {
       SchemaToMetaBean.main(args);
     } else if (procName.equalsIgnoreCase("Mammut")) {
       Mammut.main(args);
+    }  else if (procName.equalsIgnoreCase("DelMetaData")) {
+      DelMetaData.main(args);
     } else {
       System.out.println("error --p arg");
       HelpFormatter hf = new HelpFormatter();

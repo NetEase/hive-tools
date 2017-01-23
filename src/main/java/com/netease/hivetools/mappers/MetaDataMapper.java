@@ -2,6 +2,7 @@ package com.netease.hivetools.mappers;
 
 import com.netease.hivetools.apps.SchemaToMetaBean;
 import com.netease.hivetools.meta.SerdeParams;
+import com.netease.hivetools.meta.Tbls;
 import com.netease.hivetools.service.MyBatisUtil;
 import org.apache.ibatis.session.SqlSession;
 import org.apache.log4j.Logger;
@@ -27,13 +28,28 @@ public class MetaDataMapper {
     return tabName;
   }
 
-  public List<Object> getTableRecords(String tabName) {
+  public List<Object> getDbsRecords(String tabName) {
+    List<Object> list = null;
+    SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
+    try {
+      String statement = "com.netease.hivetools.mappers.MetaDataMapper.getTabsRecords";
+      list = sqlSession.selectList(statement);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.getMessage());
+    } finally {
+      sqlSession.close();
+    }
+    return list;
+  }
+
+  public List<Object> getTableRecords(String tabName, Object params) {
     List<Object> list = null;
     SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
     try {
       tabName = SchemaToMetaBean.formatTableColumnName(tabName, true);
       String statement = "com.netease.hivetools.mappers.MetaDataMapper.get" + tabName + "Records";
-      list = sqlSession.selectList(statement);
+      list = sqlSession.selectList(statement, params);
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e.getMessage());
@@ -76,6 +92,23 @@ public class MetaDataMapper {
       sqlSession.close();
     }
     return maxId;
+  }
+
+  public boolean deleteTable(Tbls tbls) {
+    SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
+    try {
+      String statement = "com.netease.hivetools.mappers.MetaDataMapper.deleteTbls";
+      int delCount = sqlSession.delete(statement, tbls);
+      sqlSession.commit();
+      logger.info("deleteTable[" + tbls.getTblName() + "] delete count = " + delCount);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.getMessage());
+      return false;
+    } finally {
+      sqlSession.close();
+    }
+    return true;
   }
 
   public int getTableMinId(String tabName) {

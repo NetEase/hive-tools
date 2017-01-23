@@ -30,10 +30,11 @@
     </delete>
 
     <!--DBS-->
-    <select id='getDbsRecords' resultType='com.netease.hivetools.meta.Dbs'>
-        <![CDATA[
-            SELECT * FROM DBS ORDER BY DB_ID
-        ]]>
+    <select id='getDbsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Dbs'>
+        SELECT * FROM DBS WHERE 1=1
+        <if test='database_name != "NONE"'>
+            AND NAME = '${database_name}'
+        </if>
     </select>
     <select id="getDbsMaxId" resultType="int">
         <![CDATA[
@@ -1154,11 +1155,13 @@
     </delete>
 
     <!--TBLS-->
-    <select id='getTblsRecords' resultType='com.netease.hivetools.meta.Tbls'>
-        <![CDATA[
-            SELECT * FROM TBLS ORDER BY TBL_ID
-        ]]>
+    <select id='getTblsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Tbls'>
+        SELECT * FROM TBLS WHERE 1=1
+        <if test='db_id != "NONE"'>
+            AND DB_ID = ${db_id}
+        </if>
     </select>
+
     <select id="getTblsMaxId" resultType="int">
         <![CDATA[
             SELECT IFNULL(MAX(TBL_ID), 0) FROM TBLS
@@ -1187,6 +1190,14 @@
     </insert>
     <delete id="rollbackTbls" parameterType="java.util.Map">
         DELETE FROM TBLS WHERE TBL_ID > ${mapPlusId.TBLS}
+    </delete>
+    <delete id="deleteTbls" parameterType="java.util.Map">
+        DELETE FROM PARTITION_KEY_VALS WHERE PART_ID IN (SELECT PART_ID FROM PARTITIONS WHERE TBL_ID = #{tbl_id});
+        DELETE FROM PARTITION_PARAMS WHERE PART_ID IN (select PART_ID from PARTITIONS WHERE TBL_ID = #{tbl_id});
+        DELETE FROM PARTITIONS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM PARTITION_KEYS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TABLE_PARAMS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TBLS WHERE TBL_ID = #{tbl_id};
     </delete>
 
     <!--TBL_COL_PRIVS-->
