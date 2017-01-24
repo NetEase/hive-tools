@@ -43,6 +43,7 @@ public class DelMetaData {
           }
         }
       }
+      sourceMetaData.deleteDatabase((Dbs) object);
     }
   }
 

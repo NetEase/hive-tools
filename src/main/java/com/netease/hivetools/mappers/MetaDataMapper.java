@@ -1,6 +1,7 @@
 package com.netease.hivetools.mappers;
 
 import com.netease.hivetools.apps.SchemaToMetaBean;
+import com.netease.hivetools.meta.Dbs;
 import com.netease.hivetools.meta.SerdeParams;
 import com.netease.hivetools.meta.Tbls;
 import com.netease.hivetools.service.MyBatisUtil;
@@ -100,7 +101,24 @@ public class MetaDataMapper {
       String statement = "com.netease.hivetools.mappers.MetaDataMapper.deleteTbls";
       int delCount = sqlSession.delete(statement, tbls);
       sqlSession.commit();
-      logger.info("deleteTable[" + tbls.getTblName() + "] delete count = " + delCount);
+      logger.info("--- deleteTable[" + tbls.getTblName() + "]--- delete count = " + delCount);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.getMessage());
+      return false;
+    } finally {
+      sqlSession.close();
+    }
+    return true;
+  }
+
+  public boolean deleteDatabase(Dbs dbs) {
+    SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
+    try {
+      String statement = "com.netease.hivetools.mappers.MetaDataMapper.deleteDbs";
+      int delCount = sqlSession.delete(statement, dbs);
+      sqlSession.commit();
+      logger.info("=== deleteDatabase[" + dbs.getName() + "]=== delete count = " + delCount);
     } catch (Exception e) {
       e.printStackTrace();
       logger.error(e.getMessage());

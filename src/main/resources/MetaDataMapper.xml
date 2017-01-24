@@ -33,7 +33,7 @@
     <select id='getDbsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Dbs'>
         SELECT * FROM DBS WHERE 1=1
         <if test='database_name != "NONE"'>
-            AND NAME = '${database_name}'
+            AND NAME like '${database_name}'
         </if>
     </select>
     <select id="getDbsMaxId" resultType="int">
@@ -60,6 +60,12 @@
             #{item.name}
         </foreach>
     </select>
+    <delete id="deleteDbs" parameterType="java.util.Map">
+        DELETE FROM FUNC_RU WHERE FUNC_ID IN (SELECT FUNC_ID FROM FUNCS WHERE DB_ID = #{db_id});
+        DELETE FROM FUNCS WHERE DB_ID = #{db_id};
+        DELETE FROM DB_PRIVS WHERE DB_ID = #{db_id};
+        DELETE FROM DBS WHERE DB_ID = #{db_id};
+    </delete>
     <delete id="rollbackDbs" parameterType="java.util.Map">
         DELETE FROM DBS WHERE DB_ID > ${mapPlusId.DBS}
     </delete>
@@ -1197,6 +1203,7 @@
         DELETE FROM PARTITIONS WHERE TBL_ID = #{tbl_id};
         DELETE FROM PARTITION_KEYS WHERE TBL_ID = #{tbl_id};
         DELETE FROM TABLE_PARAMS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TBL_PRIVS WHERE TBL_ID = #{tbl_id};
         DELETE FROM TBLS WHERE TBL_ID = #{tbl_id};
     </delete>
 
