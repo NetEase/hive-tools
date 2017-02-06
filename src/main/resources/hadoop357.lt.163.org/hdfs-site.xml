@@ -1,0 +1,463 @@
+<?xml version="1.0"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+ 
+<configuration>
+
+    <property>
+        <name>local.hostname.nn1</name>
+        <value>hadoop353.lt.163.org</value>
+    </property>
+    <property>
+        <name>local.hostname.nn2</name>
+        <value>hadoop354.lt.163.org</value>
+    </property>
+    <property>
+        <name>local.hostname.nn3</name>
+        <value>hadoop355.lt.163.org</value>
+    </property>
+    <property>
+        <name>local.hostname.nn4</name>
+        <value>hadoop356.lt.163.org</value>
+    </property>
+ 
+    <property>
+        <name>dfs.nameservices</name>
+        <value>mycluster,mycluster3</value>
+    </property>
+    <property>
+        <name>dfs.ha.namenodes.mycluster</name>
+        <value>nn1,nn2</value>
+    </property>
+    <property>
+        <name>dfs.ha.namenodes.mycluster3</name>
+        <value>nn3,nn4</value>
+    </property> 
+    <property>
+        <name>dfs.namenode.rpc-address.mycluster.nn1</name>
+        <value>${local.hostname.nn1}:8020</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address.mycluster.nn2</name>
+        <value>${local.hostname.nn2}:8020</value>
+    </property>
+ 
+    <property>
+        <name>dfs.namenode.http-address.mycluster.nn1</name>
+        <value>${local.hostname.nn1}:50070</value>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address.mycluster.nn2</name>
+        <value>${local.hostname.nn2}:50070</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.rpc-address.mycluster3.nn3</name>
+        <value>${local.hostname.nn3}:8020</value>
+    </property>
+    <property>
+        <name>dfs.namenode.rpc-address.mycluster3.nn4</name>
+        <value>${local.hostname.nn4}:8020</value>
+    </property>
+ 
+    <property>
+        <name>dfs.namenode.http-address.mycluster3.nn3</name>
+        <value>${local.hostname.nn3}:50070</value>
+    </property>
+    <property>
+        <name>dfs.namenode.http-address.mycluster3.nn4</name>
+        <value>${local.hostname.nn4}:50070</value>
+    </property>
+
+    <property>
+        <name>dfs.client.failover.proxy.provider.mycluster</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+    <property>
+        <name>dfs.client.failover.proxy.provider.mycluster3</name>
+        <value>org.apache.hadoop.hdfs.server.namenode.ha.ConfiguredFailoverProxyProvider</value>
+    </property>
+ 
+    <!-- JournalNode Configuration -->
+    <property>
+        <name>dfs.namenode.shared.edits.dir</name>
+        <value>qjournal://hadoop355.lt.163.org:8485;hadoop356.lt.163.org:8485;hadoop357.lt.163.org:8485/mycluster3</value>
+    </property>
+    <property>
+        <name>dfs.journalnode.edits.dir</name>
+        <value>/home/hadoop/jn</value>
+    </property>
+    <property>
+        <name>dfs.journalnode.keytab.file</name>
+        <value>/home/hadoop/yarn/conf/hdfs.keytab</value> <!-- path to the HDFS keytab -->
+    </property>
+    <property>
+        <name>dfs.journalnode.kerberos.principal</name>
+        <value>hdfs/_HOST@${local.realm}</value>
+    </property>
+    <property>
+        <name>dfs.journalnode.kerberos.internal.spnego.principal</name>
+        <value>HTTP/_HOST@${local.realm}</value>
+    </property>
+ 
+    <property>
+        <name>dfs.ha.fencing.methods</name>
+        <value>shell(/bin/true)</value>
+    </property>
+    <property>
+        <name>dfs.ha.automatic-failover.enabled</name>
+        <value>true</value>
+    </property>
+ 
+    <!-- file system properties -->
+    <property>
+        <name>dfs.name.dir</name>
+        <value>/home/hadoop/hdfs/name</value>
+        <description>Determines where on the local filesystem the DFS namenode
+            should store the name table. If this is a comma-delimited list
+            of directories then the name table is replicated in all of the
+            directories, for redundancy.
+        </description>
+        <final>true</final>
+    </property>
+ 
+    <property>
+        <name>dfs.data.dir</name>
+        <value>file:///srv/data/0/data,file:///srv/data/1/data,file:///srv/data/2/data,file:///srv/data/3/data,file:///srv/data/4/data,file:///srv/data/5/data,file:///srv/data/6/data,file:///srv/data/7/data,file:///srv/data/8/data,file:///srv/data/9/data,file:///srv/data/10/data,file:///srv/data/11/data</value>
+        <description>Determines where on the local filesystem an DFS datanode
+            should store its blocks. If this is a comma-delimited
+            list of directories, then data will be stored in all named
+            directories, typically on different devices.
+            Directories that do not exist are ignored.
+        </description>
+        <final>true</final>
+    </property>
+ 
+    <property>
+        <name>dfs.heartbeat.interval</name>
+        <value>10</value>
+        <description>Determines datanode heartbeat interval in seconds.</description>
+    </property>
+ 
+    <property>
+        <name>dfs.safemode.threshold.pct</name>
+        <value>0.999f</value>
+        <description>
+            Specifies the percentage of blocks that should satisfy
+            the minimal replication requirement defined by
+            dfs.replication.min.
+            Values less than or equal to 0 mean not to
+            start in safe mode.
+            Values greater than 1 will make safe mode
+            permanent.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.address</name>
+        <value>0.0.0.0:1004</value>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.http.address</name>
+        <value>0.0.0.0:1006</value>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.ipc.address</name>
+        <value>0.0.0.0:8025</value>
+        <description>
+            The datanode ipc server address and port.
+            If the port is
+            0 then the server will start on a free port.
+        </description>
+    </property>
+ 
+    <!-- Permissions configuration -->
+    <property>
+        <name>dfs.umaskmode</name>
+        <value>027</value>
+        <description>
+          The octal umask used when creating files and
+          directories.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.permissions</name>
+        <value>true</value>
+        <description>
+          If "true", enable permission checking in HDFS.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.permissions.supergroup</name>
+        <value>hdfs</value>
+        <description>The name of the group of super-users.</description>
+    </property>
+ 
+    <property>
+        <name>dfs.block.access.token.enable</name>
+        <value>true</value>
+        <description>
+          Are access tokens are used as capabilities for
+          accessing datanodes.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.namenode.kerberos.principal</name>
+        <value>hdfs/_HOST@${local.realm}</value>
+        <description>
+          Kerberos principal name for the NameNode
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.namenode.kerberos.internal.spnego.principal</name>
+        <value>HTTP/_HOST@${local.realm}</value>
+    </property>
+ 
+    <property>
+        <name>dfs.namenode.kerberos.https.principal</name>
+        <value>host/_HOST@${local.realm}</value>
+        <description>
+          The Kerberos principal for the host that the NameNode
+          runs on.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.kerberos.principal</name>
+        <value>hdfs/_HOST@${local.realm}</value>
+        <description>
+          The Kerberos principal that the DataNode runs as.
+          "_HOST" is replaced by
+          the real host name.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.kerberos.internal.spnego.principal</name>
+        <value>HTTP/_HOST@${local.realm}</value>
+    </property>
+ 
+    <property>
+        <name>dfs.namenode.keytab.file</name>
+        <value>/home/hadoop/yarn/conf/hdfs.keytab</value>
+        <description>
+          Combined keytab file containing the namenode service
+          and host principals.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.keytab.file</name>
+        <value>${dfs.namenode.keytab.file}</value>
+        <description>
+          The filename of the keytab file for the DataNode.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.data.dir.perm</name>
+        <value>700</value>
+        <description>The permissions that should be there on dfs.data.dir
+          directories. The datanode will not come up if the permissions are
+          different on existing dfs.data.dir directories. If the directories
+          don't exist, they will be created with this permission.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.access.time.precision</name>
+        <value>0</value>
+        <description>The access time for HDFS file is precise upto this
+          value.
+          The default value is 1 hour. Setting a value of 0 disables
+          access times for HDFS.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.cluster.administrators</name>
+        <value>hdfs</value>
+        <description>ACL for who all can view the default servlets in the
+          HDFS
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.https.port</name>
+        <value>50470</value>
+        <description>The https port where namenode binds</description>
+    </property>
+    <property>
+        <name>dfs.https.enable</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>dfs.thrift.address</name>
+        <value>0.0.0.0:10090</value>
+    </property>
+ 
+    <property>
+        <name>dfs.block.size</name>
+        <value>268435456</value>
+        <description>The default block size for new files.</description>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.socket.write.timeout</name>
+        <value>3000000</value>
+    </property>
+ 
+    <property>
+        <name>dfs.socket.timeout</name>
+        <value>3000000</value>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.max.xcievers</name>
+        <value>4096</value>
+    </property>
+ 
+    <property>
+        <name>dfs.namenode.handler.count</name>
+        <value>128</value>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.handler.count</name>
+        <value>12</value>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.failed.volumes.tolerated</name>
+        <value>1</value>
+        <description>The number of volumes that are allowed to
+          fail before a
+          datanode stops offering service. By default
+          any volume failure will
+          cause a datanode to shutdown.
+        </description>
+    </property>
+ 
+    <property>
+        <name>dfs.balance.bandwidthPerSec</name>
+        <value>20485760</value>
+        <description>20MB</description>
+    </property>
+ 
+    <property>
+        <name>dfs.datanode.du.reserved</name>
+        <value>375809638400</value>
+        <description>reserve 350GB disk</description>
+    </property>
+
+    <property>
+        <name>dfs.hosts</name>
+        <value>/home/hadoop/hosts/hdfs_include</value>
+    </property>
+    <property>
+        <name>dfs.hosts.exclude</name>
+        <value>/home/hadoop/hosts/hdfs_exclude</value>
+    </property>
+ 
+    <!-- enable webhdfs -->
+    <property>
+        <name>dfs.webhdfs.enabled</name>
+        <value>true</value>
+    </property>
+ 
+    <property>
+        <name>dfs.web.authentication.kerberos.principal</name>
+        <value>HTTP/_HOST@${local.realm}</value>
+    </property>
+ 
+    <property>
+        <name>dfs.web.authentication.kerberos.keytab</name>
+        <value>/home/hadoop/yarn/conf/hdfs.keytab</value>
+    </property>
+ 
+    <!-- enable Short-Circuit Local Reads -->
+    <property>
+        <name>dfs.client.read.shortcircuit</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.client.read.shortcircuit.streams.cache.size</name>
+        <value>1000</value>
+    </property>
+    <property>
+        <name>dfs.client.read.shortcircuit.streams.cache.size.expiry.ms</name>
+        <value>1000</value>
+    </property>
+    <property>
+        <name>dfs.domain.socket.path</name>
+        <value>/var/run/hadoop-hdfs/dn._PORT</value>
+    </property>
+
+    <property>
+        <name>dfs.datanode.available-space-volume-choosing-policy.balanced-space-threshold</name>
+        <value>10737418240</value>
+    </property>
+    <property>
+        <name>dfs.datanode.available-space-volume-choosing-policy.balanced-space-preference-fraction</name>
+        <value>0.75f</value>
+    </property>
+    <property>
+        <name>dfs.datanode.fsdataset.volume.choosing.policy</name>
+        <value>org.apache.hadoop.hdfs.server.datanode.fsdataset.AvailableSpaceVolumeChoosingPolicy</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.checkpoint.period</name>
+        <value>7200</value>
+    </property>
+
+    <property>
+        <name>dfs.image.compress</name>
+        <value>true</value>
+    </property>
+    <property>
+        <name>dfs.image.transfer.timeout</name>
+        <value>1200000</value>
+    </property>
+    <property>
+        <name>dfs.image.compression.codec</name>
+        <value>com.hadoop.compression.lzo.LzoCodec</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.acls.enabled</name>
+        <value>true</value>
+    </property>
+
+    <property>
+        <name>dfs.namenode.xattrs.enabled</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>dfs.datanode.max.locked.memory</name>
+        <value>0</value>
+    </property>
+ 
+    <property>
+        <name>ipc.client.ping</name>
+        <value>false</value>
+    </property>
+
+    <property>
+        <name>ipc.ping.interval</name>
+        <value>300000</value>
+    </property>
+
+<property>
+    <name>dfs.block.replicator.classname</name>
+    <value>org.apache.hadoop.hdfs.server.blockmanagement.AvailableSpaceBlockPlacementPolicy</value>
+</property>
+</configuration>
+
