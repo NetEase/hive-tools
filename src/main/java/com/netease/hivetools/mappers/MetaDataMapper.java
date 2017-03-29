@@ -44,12 +44,20 @@ public class MetaDataMapper {
     return list;
   }
 
-  public List<Object> getTableRecords(String tabName, Object params) {
+  public List<Object> getTableRecords(String tabName, Map<String, Object> params) {
     List<Object> list = null;
     SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
     try {
       tabName = SchemaToMetaBean.formatTableColumnName(tabName, true);
       String statement = "com.netease.hivetools.mappers.MetaDataMapper.get" + tabName + "Records";
+
+      if (null == params) {
+        // init
+        params = new HashMap<String,Object>();
+        params.put("database_name", "%");
+        params.put("db_id", "%");
+      }
+
       list = sqlSession.selectList(statement, params);
     } catch (Exception e) {
       e.printStackTrace();

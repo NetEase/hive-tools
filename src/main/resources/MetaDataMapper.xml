@@ -31,10 +31,7 @@
 
     <!--DBS-->
     <select id='getDbsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Dbs'>
-        SELECT * FROM DBS WHERE 1=1
-        <if test='database_name != "NONE"'>
-            AND NAME like '${database_name}'
-        </if>
+        SELECT * FROM DBS WHERE 1=1 AND NAME like '${database_name}'
     </select>
     <select id="getDbsMaxId" resultType="int">
         <![CDATA[
@@ -50,8 +47,7 @@
         INSERT INTO DBS (`DB_ID`,`DESC`,`DB_LOCATION_URI`,`NAME`,`OWNER_NAME`,`OWNER_TYPE`) VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (${mapPlusId.DBS} + #{item.db_id}, #{item.desc}, #{item.db_location_uri},
-            CONCAT('${mapPlusId.sourceName}','_',#{item.name}),
-            #{item.owner_name}, #{item.owner_type})
+            #{item.name}, #{item.owner_name}, #{item.owner_type})
         </foreach>
     </insert>
     <select id="checkUniqueKeyDbs" parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Dbs'>
@@ -60,9 +56,10 @@
             #{item.name}
         </foreach>
     </select>
-    <delete id="deleteDbs" parameterType="java.util.Map">
+    <delete id="deleteDbs" parameterType="com.netease.hivetools.meta.Dbs">
         DELETE FROM FUNC_RU WHERE FUNC_ID IN (SELECT FUNC_ID FROM FUNCS WHERE DB_ID = #{db_id});
         DELETE FROM FUNCS WHERE DB_ID = #{db_id};
+        DELETE FROM DATABASE_PARAMS WHERE DB_ID = #{db_id};
         DELETE FROM DB_PRIVS WHERE DB_ID = #{db_id};
         DELETE FROM DBS WHERE DB_ID = #{db_id};
     </delete>
@@ -1162,10 +1159,7 @@
 
     <!--TBLS-->
     <select id='getTblsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Tbls'>
-        SELECT * FROM TBLS WHERE 1=1
-        <if test='db_id != "NONE"'>
-            AND DB_ID = ${db_id}
-        </if>
+        SELECT * FROM TBLS WHERE DB_ID like '${db_id}'
     </select>
 
     <select id="getTblsMaxId" resultType="int">
@@ -1197,7 +1191,7 @@
     <delete id="rollbackTbls" parameterType="java.util.Map">
         DELETE FROM TBLS WHERE TBL_ID > ${mapPlusId.TBLS}
     </delete>
-    <delete id="deleteTbls" parameterType="java.util.Map">
+    <delete id="deleteTbls" parameterType="com.netease.hivetools.meta.Tbls">
         DELETE FROM PARTITION_KEY_VALS WHERE PART_ID IN (SELECT PART_ID FROM PARTITIONS WHERE TBL_ID = #{tbl_id});
         DELETE FROM PARTITION_PARAMS WHERE PART_ID IN (select PART_ID from PARTITIONS WHERE TBL_ID = #{tbl_id});
         DELETE FROM PARTITIONS WHERE TBL_ID = #{tbl_id};

@@ -134,7 +134,7 @@ public class HdfsTest {
 
   public void proxyTest() throws Exception {
     UserGroupInformation ugi = null;
-
+    System.setProperty("java.security.krb5.conf", "krb5.conf");
     if (_hadoop_cluster.equalsIgnoreCase("hadoop")) {
       _hadoop_conf.addResource("hadoop357.lt.163.org/core-site.xml");
       _hadoop_conf.addResource("hadoop357.lt.163.org/hdfs-site.xml");

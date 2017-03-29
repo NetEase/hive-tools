@@ -11,6 +11,7 @@ import org.apache.log4j.PropertyConfigurator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Scanner;
 
 /**
  * Created by hzliuxun on 17/1/22.
@@ -25,26 +26,49 @@ public class DelMetaData {
 
     cliCommond(args);
 
+    Scanner sc = new Scanner(System.in);
+    String useInput = "";
+    while (!useInput.equals("Y")) {
+      System.err.println("请先备份数据库!");
+      System.err.println("删除数据源 " + MyBatisUtil.sourceName + " 中的数据库 " + del_database_name + ", 表 " + del_table_name + " 请输入[Y/n] : ");
+
+      useInput = sc.nextLine();
+      if (useInput.equalsIgnoreCase("n")) {
+        System.exit(1);
+      }
+    }
+
+    String[] delDbNames = del_database_name.split(",");
+    for (String delDbName : delDbNames) {
+      deleteMetaData(delDbName);
+    }
+  }
+
+  static void deleteMetaData(String delDbName) {
+    System.out.println("==> deleteMetaData(" + delDbName + ")");
     MetaDataMapper sourceMetaData = new MetaDataMapper(MyBatisUtil.sourceName);
 
     Map<String, Object> params = new HashMap<String,Object>();
-    params.put("database_name", del_database_name);
+    params.put("database_name", delDbName);
     List<Object> dbs = (List) sourceMetaData.getTableRecords("DBS", params);
     for(Object object : dbs){
       params.put("db_id", ((Dbs) object).getDbId().toString());
       List<Object> tables = (List) sourceMetaData.getTableRecords("TBLS", params);
       for(Object table : tables){
         if (del_table_name.isEmpty()) {
+          // delete all table
+          System.out.println("删除表名 = " + ((Tbls) table).getTblName() + ", ID = " +  + ((Tbls) table).getTblId());
           sourceMetaData.deleteTable((Tbls) table);
-        } else {
-          if (del_table_name.equalsIgnoreCase(((Tbls) table).getTblName())) {
-            sourceMetaData.deleteTable((Tbls) table);
-            break;
-          }
+        } else if (del_table_name.equalsIgnoreCase(((Tbls) table).getTblName())) {
+          // delete match table
+          System.out.println("删除表名 = " + ((Tbls) table).getTblName() + ", ID = " +  + ((Tbls) table).getTblId());
+          sourceMetaData.deleteTable((Tbls) table);
+          break;
         }
       }
       sourceMetaData.deleteDatabase((Dbs) object);
     }
+    System.out.println("<== deleteMetaData(" + delDbName + ")");
   }
 
   static private void cliCommond(String[] args) {
@@ -89,7 +113,12 @@ public class DelMetaData {
       System.exit(1);
     }
     if( cl.hasOption("s") ) {
-      MyBatisUtil.sourceName = cl.getOptionValue("s");
+      String tempDb = cl.getOptionValue("s");
+      if (!tempDb.equalsIgnoreCase("exchange_db")) {
+        System.out.println("错误! 待删除的数据源名称不是 exchange_db ??");
+        System.exit(1);
+      }
+      MyBatisUtil.sourceName = tempDb;
     } else {
       System.out.println("missing --s arg");
       HelpFormatter hf = new HelpFormatter();

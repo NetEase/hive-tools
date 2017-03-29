@@ -27,9 +27,17 @@ public class MetaDataMerge {
 //		MyBatisUtil.sourceName = "hive_haitao";
 //		MyBatisUtil.destName = "hive_merge";
 
-		logger.info("========================================================");
+		logger.info("=====================================================");
+		System.out.println("第一步:分别使用 2 个独立窗口的 SecureCRT,分别操作 SOURCE 和 DEST");
+		System.out.println("第二步:关闭 SOURCE 的 HiveCluster 集群");
+		System.out.println("第三步:备份所有数据库");
+		System.out.println("第四步:将 SOURCE 数据源导入 exchange_db");
+		System.out.println("第五步:在 exchange_db 中删除多余的 DB");
+		System.out.println("第六步:检查是否存着和 DEST 数据库存着数据库重名,联系业务方将重名的数据库该名");
+		System.out.println("第七步:合并数据源");
+		logger.info("-----------------------------------------------------");
 		logger.info("将元数据 " + MyBatisUtil.sourceName + " 合并到 " + MyBatisUtil.destName);
-		logger.info("========================================================");
+		logger.info("=====================================================");
 
 		MetaDataMapper sourceMetaData = new MetaDataMapper(MyBatisUtil.sourceName);
 		MetaDataMapper destMetaData = new MetaDataMapper(MyBatisUtil.destName);
@@ -109,6 +117,7 @@ public class MetaDataMerge {
 		Scanner sc = new Scanner(System.in);
 		String useInput = "";
 		while (!useInput.equals("Y")) {
+			System.out.println("请先备份数据库!");
 			System.out.print("将元数据 " + MyBatisUtil.sourceName + " 合并到 " + MyBatisUtil.destName + " 操作请输入[Y/n] : ");
 
 			useInput = sc.nextLine();
@@ -290,6 +299,7 @@ public class MetaDataMerge {
 			logger.info(">>> 检查 [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + dbName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + dbName + "] 数据是否存在冲突?");
 
 			List<Object> listRecords = (List) sourceMetaData.getTableRecords(dbName, null);
+			/*
 			if (dbName.equalsIgnoreCase("DBS")) {
 				// 生成新的数据库名称
 				for(Object object : listRecords){
@@ -297,6 +307,7 @@ public class MetaDataMerge {
 					((Dbs) object).setName(newDbName);
 				}
 			}
+			*/
 			List<Object> listUniqueKey = destMetaData.checkUniqueKey(dbName, listRecords);
 			if (listUniqueKey.size() > 0) {
 				conflict = true;

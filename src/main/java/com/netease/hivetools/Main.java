@@ -8,11 +8,13 @@ import com.netease.hivetools.apps.SchemaToMetaBean;
 import org.apache.commons.cli.*;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.junit.Test;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.ArrayList;
 
 public class Main {
   private static final Logger logger = Logger.getLogger(Main.class.getName());
@@ -21,7 +23,7 @@ public class Main {
     PropertyConfigurator.configure("log4j.properties");
 
 //    test(args);
-    cliCommond(args);
+//    cliCommond(args);
   }
 
   static private void cliCommond(String[] args) {
@@ -76,24 +78,76 @@ public class Main {
     }
   }
 
+  static class TabInfo{
+    public String tblId = "";
+    public String tblName = "";
+    public String tblType = "";
+    public String tblLocation = "";
+    public String partName = "";
+    public String partLocation = "";
+
+    public TabInfo() {}
+
+    @Override
+    public String toString() {
+      return "tblId = " + tblId + ", tblName = " + tblName +", tblType = " + tblType +", tblLocation = " + tblLocation +", partName = " + partName +", partLocation = " + partLocation;
+    }
+  }
+
+  @Test
   public static void test(String[] args)
   {
-    System.out.println("test string=" + "walmart öbama 👽💔");
     String url = "jdbc:mysql://10.120.232.16:3306/haitao1201?useUnicode=true&characterEncoding=UTF-8";
     try
     {
       Class.forName("com.mysql.jdbc.Driver").newInstance();
       Connection c = DriverManager.getConnection(url, "haitao1201", "haitao1201");
-      PreparedStatement p = c.prepareStatement("select * from PARTITION_PARAMS where PART_ID>= 130000 and PART_ID < 140000;");
+      PreparedStatement p = c.prepareStatement("select TBLS.TBL_ID, TBLS.TBL_NAME, TBLS.TBL_TYPE, SDS.LOCATION from TBLS, SDS where TBLS.SD_ID = SDS.SD_ID;"); //  limit 300
       p.execute();
       ResultSet rs = p.getResultSet();
+      ArrayList<TabInfo> tabInfos = new ArrayList<>();
       while (!rs.isLast())
       {
-        rs.next();
-        String retrieved = rs.getString(1) + "," + rs.getString(2) + "," + rs.getString(3);
-        logger.info("retrieved=\"" + retrieved + "\"");
+        if (!rs.next())
+          break;
 
+        TabInfo tabInfo = new TabInfo();
+        tabInfo.tblId = rs.getString(1);
+        tabInfo.tblName = rs.getString(2);
+        tabInfo.tblType = rs.getString(3);
+        tabInfo.tblLocation = rs.getString(4)==null?"":rs.getString(4);
+
+        tabInfos.add(tabInfo);
       }
+      rs.close();
+
+      for (TabInfo tabInfo : tabInfos) {
+        String sql = "select SDS.LOCATION, PARTITIONS.PART_NAME from SDS, PARTITIONS where PARTITIONS.SD_ID = SDS.SD_ID and TBL_ID = " + tabInfo.tblId + " limit 1";
+        p = c.prepareStatement(sql);
+        p.execute();
+        rs = p.getResultSet();
+        while (!rs.isLast())
+        {
+          if (!rs.next())
+            break;
+          tabInfo.partLocation = rs.getString(1)==null?"":rs.getString(1);
+          tabInfo.partName = rs.getString(2)==null?"":rs.getString(2);
+        }
+        rs.close();
+      }
+
+      int count = 0, notsame = 0;
+      for (TabInfo tabInfo : tabInfos) {
+        count ++;
+        boolean samePath = tabInfo.partLocation.startsWith(tabInfo.tblLocation);
+        if (samePath) {
+//          System.out.println("Y " + tabInfo.toString());
+        } else if(!samePath && !tabInfo.partLocation.isEmpty()) {
+          notsame ++;
+          System.out.println("N " + tabInfo.toString());
+        }
+      }
+      System.out.println("总数: " + count + ", 不相同的: " + notsame);
     }
     catch (Exception e)
     {
