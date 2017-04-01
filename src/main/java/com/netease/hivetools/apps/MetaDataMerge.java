@@ -176,9 +176,9 @@ public class MetaDataMerge {
 
 		if (true == mergeSuccess) {
 			logger.info("合并 "+ MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 成功! [√]");
-			logger.info("[数据源:" + MyBatisUtil.destName + "].[表:DBS]中数据库名称全部进行了自动调整,请根据需要手工修改.");
-			logger.info("SELECT * FROM DBS WHERE NAME LIKE '" + MyBatisUtil.sourceName + "%'");
-			logger.info("UPDATE DBS SET NAME = ? WHERE DB_ID = ?");
+//		logger.info("[数据源:" + MyBatisUtil.destName + "].[表:DBS]中数据库名称全部进行了自动调整,请根据需要手工修改.");
+//		logger.info("SELECT * FROM DBS WHERE NAME LIKE '" + MyBatisUtil.sourceName + "%'");
+//		logger.info("UPDATE DBS SET NAME = ? WHERE DB_ID = ?");
 			logger.info("============= " + MyBatisUtil.sourceName + " 表ID跳号信息 =============");
 			logger.info(mapPlusId);
 			logger.info("========================================================");
@@ -290,10 +290,7 @@ public class MetaDataMerge {
 		dbs.add("VERSION");
 		dbs.add("DBS");
 		dbs.add("TYPES");
-
-		/* not check Conflict
-		tables.add("ROLES");
-		*/
+		dbs.add("ROLES");
 
 		for (String dbName :dbs) {
 			logger.info(">>> 检查 [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + dbName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + dbName + "] 数据是否存在冲突?");
