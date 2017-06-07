@@ -49,6 +49,7 @@ class zkListener implements ConnectionStateListener {
 
 public class MetastoreChangelog {
   private static final Logger LOGGER = Logger.getLogger(MetastoreChangelog.class.getName());
+
   protected static CuratorFramework zkClient;
   private static zkListener listener = null;
   private static String zkHost = "";
@@ -173,12 +174,13 @@ public class MetastoreChangelog {
               if (!filte_database.isEmpty() && !dbName.contains(filte_database)) {
                 continue;
               }
-              if (!filte_table.isEmpty() && !filte_database.contains(filte_table)) {
+              if (!filte_table.isEmpty() && !tabName.contains(filte_table)) {
                 continue;
               }
-              LOGGER.debug(" ---------- " + childPath + " ---------- ");
+              LOGGER.debug(" --- " + childPath + " --- ");
               LOGGER.debug(tUpdateMetadataRequest.toString());
-              LOGGER.debug(tUpdateMetadataRequest.getDeltas().toString());
+//            LOGGER.debug(tUpdateMetadataRequest.getDeltas().get(i).toString());
+              break;
             }
           }
         }
@@ -209,12 +211,12 @@ public class MetastoreChangelog {
     opt.addOption(OptionBuilder.withLongOpt("d")
         .withDescription("database 名称")
         .withValueSeparator('=')
-        .hasArg()
+        .hasOptionalArg()
         .create());
     opt.addOption(OptionBuilder.withLongOpt("t")
         .withDescription("table 名称")
         .withValueSeparator('=')
-        .hasArg()
+        .hasOptionalArg()
         .create());
 
     String formatstr = "MetastoreChangelog --z=<arg> --c=<arg> --d=<arg> --t=<arg> [-h/--help]";
@@ -252,19 +254,10 @@ public class MetastoreChangelog {
     }
     if( cl.hasOption("d") ) {
       filte_database = cl.getOptionValue("d");
-    } else {
-      System.out.println("missing --d arg");
-      HelpFormatter hf = new HelpFormatter();
-      hf.printHelp(formatstr, "", opt, "");
-      System.exit(1);
     }
+
     if( cl.hasOption("t") ) {
       filte_table = cl.getOptionValue("t");
-    } else {
-      System.out.println("missing --t arg");
-      HelpFormatter hf = new HelpFormatter();
-      hf.printHelp(formatstr, "", opt, "");
-      System.exit(1);
     }
   }
 }
