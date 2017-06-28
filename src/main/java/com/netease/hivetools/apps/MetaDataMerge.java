@@ -83,9 +83,6 @@ public class MetaDataMerge {
 		tables.add("NUCLEUS_TABLES");
 		tables.add("PARTITION_EVENTS");
 		// have constraint
-		tables.add("ROLES");
-		tables.add("ROLE_MAP");
-		tables.add("SERDES");
 		tables.add("SERDE_PARAMS");
 		tables.add("SDS");
 		tables.add("SD_PARAMS");
@@ -121,6 +118,9 @@ public class MetaDataMerge {
 		tables.add("DB_PRIVS");
 
 		/* not merge
+		tables.add("ROLES");
+		tables.add("ROLE_MAP");
+		tables.add("SERDES");
 		tables.add("GLOBAL_PRIVS");
 		tables.add("DELEGATION_TOKENS");
 		tables.add("SEQUENCE_TABLE");
