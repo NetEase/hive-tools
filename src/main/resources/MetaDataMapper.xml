@@ -760,14 +760,21 @@
             (#{item.sequence_name}, #{item.next_val})
         </foreach>
     </insert>
-    <update id="batchUpdateSequenceTable" parameterType="java.util.Map">
-        <foreach collection="list" item="item" index="index" open="" close="" separator=";">
-            UPDATE SEQUENCE_TABLE
-            <set>
-                NEXT_VAL = #{item.next_val}
-            </set>
-            where SEQUENCE_NAME = #{item.sequence_name}
-        </foreach>
+    <update id="updateSequenceTable">
+        BEGIN
+            update SEQUENCE_TABLE set NEXT_VAL=(select max(CD_ID)+5 from COLUMNS_V2) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MColumnDescriptor';
+            update SEQUENCE_TABLE set NEXT_VAL=(select max(DB_ID)+5 from DBS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MDatabase';
+            update SEQUENCE_TABLE set NEXT_VAL=(select max(FUNC_ID)+5 from FUNCS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MFunction';
+            <!--'org.apache.hadoop.hive.metastore.model.MGlobalPrivilege'-->
+            update SEQUENCE_TABLE set NEXT_VAL=(select max(PART_ID)+5 from PARTITIONS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MPartition';
+            <!--'org.apache.hadoop.hive.metastore.model.MRole'-->
+            <!--'org.apache.hadoop.hive.metastore.model.MRoleMap'-->
+            update SEQUENCE_TABLE set NEXT_VAL=(select max(SERDE_ID)+5 from SERDES) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MSerDeInfo';
+            update SEQUENCE_TABLE set NEXT_VAL=(select max(SD_ID)+5 from SDS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MStorageDescriptor';
+            update SEQUENCE_TABLE set NEXT_VAL=(select max(TBL_ID)+5 from TBLS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MTable';
+            <!--'org.apache.hadoop.hive.metastore.model.MTablePrivilege'-->
+            <!--'org.apache.hadoop.hive.metastore.model.MVersionTable'-->
+        END;
     </update>
     <delete id="rollbackSequenceTable" parameterType="java.util.Map">
         SELECT 0 FROM dual

@@ -83,6 +83,7 @@ public class MetaDataMerge {
 		tables.add("NUCLEUS_TABLES");
 		tables.add("PARTITION_EVENTS");
 		// have constraint
+		tables.add("SERDES");
 		tables.add("SERDE_PARAMS");
 		tables.add("SDS");
 		tables.add("SD_PARAMS");
@@ -120,7 +121,6 @@ public class MetaDataMerge {
 		/* not merge
 		tables.add("ROLES");
 		tables.add("ROLE_MAP");
-		tables.add("SERDES");
 		tables.add("GLOBAL_PRIVS");
 		tables.add("DELEGATION_TOKENS");
 		tables.add("SEQUENCE_TABLE");
@@ -195,6 +195,10 @@ public class MetaDataMerge {
 				logger.info("插入到[数据源:" + MyBatisUtil.destName +"].[表:" + tabName + "] 中 " + numResult + " 条记录.");
 			}
 		}
+        if (true == mergeSuccess) {
+            logger.info("更新 SEQUENCE_TABLE 中的流水号.");
+            mergeSuccess = destMetaData.updateSequenceTable();
+        }
 
 		if (true == mergeSuccess) {
 			logger.info("合并 "+ MyBatisUtil.sourceName + " 到 " + MyBatisUtil.destName + " 成功! [√]");
@@ -312,7 +316,9 @@ public class MetaDataMerge {
 		dbs.add("VERSION");
 		dbs.add("DBS");
 		dbs.add("TYPES");
+		/*
 		dbs.add("ROLES");
+		*/
 
 		for (String dbName :dbs) {
 			logger.info(">>> 检查 [数据源:" + MyBatisUtil.sourceName + "].[数据库:" + dbName + "] 和 [数据源:" + MyBatisUtil.destName + "].[数据库:" + dbName + "] 数据是否存在冲突?");

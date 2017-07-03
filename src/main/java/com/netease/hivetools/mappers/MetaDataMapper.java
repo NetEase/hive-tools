@@ -202,6 +202,22 @@ public class MetaDataMapper {
     return numInsert;
   }
 
+  public boolean updateSequenceTable() {
+    int count = 0;
+    SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
+    try {
+      String statement = "com.netease.hivetools.mappers.MetaDataMapper.updateSequenceTable";
+      count = sqlSession.update(statement);
+      logger.info("update SequenceTable count = " + count);
+    } catch (Exception e) {
+      e.printStackTrace();
+      logger.error(e.getMessage());
+    } finally {
+      sqlSession.close();
+    }
+    return (count>0)?true:false;
+  }
+
   public int rollback(String tabName, HashMap<String, Object> mapPlusId) {
     int numRollback = 0;
     SqlSession sqlSession = MyBatisUtil.getSqlSessionFactory(this.sourceName).openSession();
