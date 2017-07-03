@@ -208,6 +208,7 @@ public class MetaDataMapper {
     try {
       String statement = "com.netease.hivetools.mappers.MetaDataMapper.updateSequenceTable";
       count = sqlSession.update(statement);
+      sqlSession.commit();
       logger.info("update SequenceTable count = " + count);
     } catch (Exception e) {
       e.printStackTrace();
