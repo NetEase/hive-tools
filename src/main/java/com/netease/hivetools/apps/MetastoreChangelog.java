@@ -22,6 +22,8 @@ import org.apache.zookeeper.data.Stat;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -68,6 +70,7 @@ public class MetastoreChangelog {
       setUpZooKeeperAuth();
       getSingletonClient();
 
+      // deleteZNodeData();
       listZNodeData();
     } catch (IOException e) {
       LOGGER.error(e.getMessage());
@@ -125,7 +128,7 @@ public class MetastoreChangelog {
               CuratorFrameworkFactory
                   .builder()
                   .connectString(zkHost)
-                  .aclProvider(zooKeeperAclProvider)
+//                  .aclProvider(zooKeeperAclProvider)
                   .retryPolicy(
                       new RetryNTimes(3, 3000))
                   .build();
@@ -182,6 +185,52 @@ public class MetastoreChangelog {
 //            LOGGER.debug(tUpdateMetadataRequest.getDeltas().get(i).toString());
               break;
             }
+          }
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    } finally {
+    }
+
+    if(LOGGER.isDebugEnabled()) {
+      LOGGER.debug("<== writeZNodeData()");
+    }
+  }
+
+  private static void deleteZNodeData() {
+    if(LOGGER.isDebugEnabled()) {
+      LOGGER.debug("==> writeZNodeData()");
+    }
+
+    Date now = new Date();
+    Calendar calendar = Calendar.getInstance();
+    calendar.setTime(now);
+    calendar.set(Calendar.DATE, calendar.get(Calendar.DATE) - 3);
+    Long day3Time = calendar.getTime().getTime();
+
+    int deleted = Integer.parseInt(filte_table);
+
+    try {
+      GetChildrenBuilder childrenBuilder = zkClient.getChildren();
+      List<String> children = childrenBuilder.forPath(zkPath);
+
+      for (String child : children) {
+        if (deleted -- <= 0) {
+          return;
+        }
+        child = "/" + child;
+        if (child.equalsIgnoreCase(LOCK_RELATIVE_PATH)
+            || child.equalsIgnoreCase(MAX_ID_FILE_NAME)) {
+          // do not delete maxid and lock file
+          continue;
+        }
+        String childPath = zkPath + child;
+        Stat stat = zkClient.checkExists().forPath(childPath);
+        if (null != stat ) {
+          if (stat.getMtime() < day3Time) {
+            LOGGER.debug("delete " + childPath);
+            zkClient.delete().forPath(childPath);
           }
         }
       }
