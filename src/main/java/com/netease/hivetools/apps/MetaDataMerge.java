@@ -6,12 +6,20 @@ import com.netease.hivetools.meta.Roles;
 import com.netease.hivetools.meta.Types;
 import com.netease.hivetools.meta.Version;
 import com.netease.hivetools.service.MyBatisUtil;
-import org.apache.commons.cli.*;
+import org.apache.commons.cli.CommandLine;
+import org.apache.commons.cli.CommandLineParser;
+import org.apache.commons.cli.HelpFormatter;
+import org.apache.commons.cli.OptionBuilder;
+import org.apache.commons.cli.Options;
+import org.apache.commons.cli.ParseException;
+import org.apache.commons.cli.PosixParser;
 import org.apache.log4j.Logger;
-import org.apache.log4j.Priority;
 import org.apache.log4j.PropertyConfigurator;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Scanner;
 
 /**
  * Created by hzliuxun on 16/10/26.
@@ -154,12 +162,13 @@ public class MetaDataMerge {
 			logger.info("将 " + MyBatisUtil.sourceName + "." + tabName + " 合并到 " + MyBatisUtil.destName + "." + tabName);
 			int destMaxDestId = destMetaData.getTableMaxId(tabName);
 			int sourceMaxDestId = sourceMetaData.getTableMaxId(tabName);
+			final int offset = 10000;
 
 			logger.info(">>> (开始分页处理) [数据源:" + MyBatisUtil.destName +"].[表:" + tabName + "] 中 maxId = " + sourceMaxDestId + ".");
 
 			mapPlusId.put("sourceName", MyBatisUtil.sourceName);
 			mapPlusId.put("destName", MyBatisUtil.destName);
-			mapPlusId.put(tabName, destMaxDestId);
+			mapPlusId.put(tabName, destMaxDestId+offset);
 
 			if (pagingProc.containsKey(tabName)) {
 				HashMap<String, Object> mapPagindId = new HashMap<String, Object>();

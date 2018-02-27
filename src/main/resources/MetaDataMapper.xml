@@ -20,7 +20,7 @@
         ]]>
     </select>
     <insert id="batchInsertCds" parameterType="java.util.Map">
-        INSERT INTO CDS (`CD_ID`) VALUES
+        INSERT INTO CDS  (`CD_ID`) VALUES
         <foreach collection="list" item="item" index="index" separator=",">
             (${mapPlusId.CDS} + #{item.cd_id} )
         </foreach>
