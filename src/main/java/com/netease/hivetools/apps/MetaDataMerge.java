@@ -72,6 +72,8 @@ public class MetaDataMerge {
 		MetaDataMapper sourceMetaData = new MetaDataMapper(MyBatisUtil.sourceName);
 		MetaDataMapper destMetaData = new MetaDataMapper(MyBatisUtil.destName);
 
+		MetaDataMapper staticOnlineMetaData = new MetaDataMapper(MyBatisUtil.onlneName);
+
 		List<String> tables = new ArrayList<String>();
 		HashMap<String, Object> mapPlusId = new HashMap<String, Object>();
 		HashMap<String, Object> pagingProc = new HashMap<String, Object>();
@@ -157,18 +159,44 @@ public class MetaDataMerge {
 		}
 
 		boolean mergeSuccess = true;
+
+		final int offset = 10000;
+
+
+		for (String tabName :tables) {
+			logger.info("计算表" + tabName + "的maxId");
+			int destMaxDestId = staticOnlineMetaData.getTableMaxId(tabName) + offset;
+			logger.info("表" + tabName + "的maxId="+destMaxDestId);
+			mapPlusId.put(tabName, destMaxDestId);
+		}
+
+		String checkInput = "";
+
+		while (!checkInput.equals("Y")) {
+			System.out.println("请确认数据库的偏移量");
+			System.out.print("将元数据 " + MyBatisUtil.sourceName + " 合并到 " + MyBatisUtil.destName + " 操作请输入[Y/n] : ");
+
+			for (String tabName :tables) {
+				System.out.println("元数据表"+tabName+"偏移量为" + mapPlusId.get(tabName));
+			}
+
+			checkInput = sc.nextLine();
+			if (checkInput.equalsIgnoreCase("n")) {
+				System.exit(1);
+			}
+		}
+
+
 		outer_loop:
 		for (String tabName :tables) {
 			logger.info("将 " + MyBatisUtil.sourceName + "." + tabName + " 合并到 " + MyBatisUtil.destName + "." + tabName);
-			int destMaxDestId = destMetaData.getTableMaxId(tabName);
 			int sourceMaxDestId = sourceMetaData.getTableMaxId(tabName);
-			final int offset = 10000;
+
 
 			logger.info(">>> (开始分页处理) [数据源:" + MyBatisUtil.destName +"].[表:" + tabName + "] 中 maxId = " + sourceMaxDestId + ".");
 
 			mapPlusId.put("sourceName", MyBatisUtil.sourceName);
 			mapPlusId.put("destName", MyBatisUtil.destName);
-			mapPlusId.put(tabName, destMaxDestId+offset);
 
 			if (pagingProc.containsKey(tabName)) {
 				HashMap<String, Object> mapPagindId = new HashMap<String, Object>();
@@ -260,8 +288,13 @@ public class MetaDataMerge {
 				.withValueSeparator('=')
 				.hasArg()
 				.create());
+		opt.addOption(OptionBuilder.withLongOpt("o")
+				.withDescription("线上的元数据静态库")
+				.withValueSeparator('=')
+				.hasArg()
+				.create());
 
-		String formatstr = "MetaDataMerga --s=<arg> --d=<arg> [-h/--help]";
+		String formatstr = "MetaDataMerga --s=<arg> --d=<arg>  --o=<arg> [-h/--help]";
 
 		HelpFormatter formatter = new HelpFormatter();
 		CommandLineParser parser = new PosixParser();
@@ -291,6 +324,15 @@ public class MetaDataMerge {
 			MyBatisUtil.destName = cl.getOptionValue("d");
 		} else {
 			System.out.println("missing --d arg");
+			HelpFormatter hf = new HelpFormatter();
+			hf.printHelp(formatstr, "", opt, "");
+			System.exit(1);
+		}
+
+		if( cl.hasOption("o") ) {
+			MyBatisUtil.onlneName = cl.getOptionValue("o");
+		} else {
+			System.out.println("missing --o arg");
 			HelpFormatter hf = new HelpFormatter();
 			hf.printHelp(formatstr, "", opt, "");
 			System.exit(1);

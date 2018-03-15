@@ -1203,6 +1203,7 @@
         DELETE FROM PARTITION_KEYS WHERE TBL_ID = #{tbl_id};
         DELETE FROM TABLE_PARAMS WHERE TBL_ID = #{tbl_id};
         DELETE FROM TBL_PRIVS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TAB_COL_STATS WHERE TBL_ID = #{tbl_id};
         DELETE FROM TBLS WHERE TBL_ID = #{tbl_id};
     </delete>
 

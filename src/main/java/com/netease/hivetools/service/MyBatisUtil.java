@@ -1,12 +1,16 @@
 package com.netease.hivetools.service;
 
-import java.io.*;
-import java.util.Properties;
-
 import org.apache.ibatis.io.Resources;
 import org.apache.ibatis.session.SqlSessionFactory;
 import org.apache.ibatis.session.SqlSessionFactoryBuilder;
 import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.Reader;
+import java.util.Properties;
 
 public class MyBatisUtil {
 
@@ -14,9 +18,10 @@ public class MyBatisUtil {
 
   private static SqlSessionFactory soucrcFactory = null;
   private static SqlSessionFactory destFactory = null;
-
+  private static SqlSessionFactory onlineFactory = null;
   public static String sourceName;
   public static String destName;
+  public static String onlneName;
 
   private static void initSqlSessionFactory(String sourceName) {
     Reader reader = null;
@@ -55,6 +60,8 @@ public class MyBatisUtil {
       soucrcFactory = new SqlSessionFactoryBuilder().build(reader, props);
     } else if (sourceName.equals(MyBatisUtil.destName)) {
       destFactory = new SqlSessionFactoryBuilder().build(reader, props);
+    } else if (sourceName.equals(MyBatisUtil.onlneName)) {
+      onlineFactory = new SqlSessionFactoryBuilder().build(reader, props);
     } else {
       logger.error("not found source : " + sourceName);
     }
@@ -71,6 +78,11 @@ public class MyBatisUtil {
         initSqlSessionFactory(sourceName);
 
       return destFactory;
+    } else if (sourceName.equals(MyBatisUtil.onlneName)) {
+      if (null == onlineFactory)
+        initSqlSessionFactory(sourceName);
+
+      return onlineFactory;
     } else {
       logger.error("not found source : " + sourceName);
       return null;
