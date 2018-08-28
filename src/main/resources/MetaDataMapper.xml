@@ -1,0 +1,1499 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+        'http://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+
+<mapper namespace='com.netease.hivetools.mappers.MetaDataMapper'>
+    <!--CDS-->
+    <select id='getCdsRecords' resultType='com.netease.hivetools.meta.Cds'>
+        <![CDATA[
+            SELECT * FROM CDS ORDER BY CD_ID
+        ]]>
+    </select>
+    <select id="getCdsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(CD_ID), 0) FROM CDS
+        ]]>
+    </select>
+    <select id="getCdsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(CD_ID), 0) FROM CDS
+        ]]>
+    </select>
+    <insert id="batchInsertCds" parameterType="java.util.Map">
+        INSERT INTO CDS  (`CD_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.CDS} + #{item.cd_id} )
+        </foreach>
+    </insert>
+    <delete id="rollbackCds" parameterType="java.util.Map">
+        DELETE FROM CDS WHERE CD_ID > ${mapPlusId.CDS}
+    </delete>
+
+    <!--DBS-->
+    <select id='getDbsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Dbs'>
+        SELECT * FROM DBS WHERE 1=1 AND NAME like '${database_name}'
+    </select>
+    <select id="getDbsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(DB_ID), 0) FROM DBS
+        ]]>
+    </select>
+    <select id="getDbsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(DB_ID), 0) FROM DBS
+        ]]>
+    </select>
+    <insert id="batchInsertDbs" parameterType="java.util.Map">
+        INSERT INTO DBS (`DB_ID`,`DESC`,`DB_LOCATION_URI`,`NAME`,`OWNER_NAME`,`OWNER_TYPE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.DBS} + #{item.db_id}, #{item.desc}, #{item.db_location_uri},
+            #{item.name}, #{item.owner_name}, #{item.owner_type})
+        </foreach>
+    </insert>
+    <select id="checkUniqueKeyDbs" parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Dbs'>
+        SELECT `NAME` FROM DBS WHERE `NAME` IN
+        <foreach collection="list" item="item"  open="(" separator="," close=")">
+            #{item.name}
+        </foreach>
+    </select>
+    <delete id="deleteDbs" parameterType="com.netease.hivetools.meta.Dbs">
+        DELETE FROM FUNC_RU WHERE FUNC_ID IN (SELECT FUNC_ID FROM FUNCS WHERE DB_ID = #{db_id});
+        DELETE FROM FUNCS WHERE DB_ID = #{db_id};
+        DELETE FROM DATABASE_PARAMS WHERE DB_ID = #{db_id};
+        DELETE FROM DB_PRIVS WHERE DB_ID = #{db_id};
+        DELETE FROM DBS WHERE DB_ID = #{db_id};
+    </delete>
+    <delete id="rollbackDbs" parameterType="java.util.Map">
+        DELETE FROM DBS WHERE DB_ID > ${mapPlusId.DBS}
+    </delete>
+
+    <!--DELEGATION_TOKENS-->
+    <select id='getDelegationTokensRecords' resultType='com.netease.hivetools.meta.DelegationTokens'>
+        <![CDATA[
+            SELECT * FROM 1
+        ]]>
+    </select>
+    <select id="getDelegationTokensMaxId" resultType="int">
+        <![CDATA[
+            SELECT 0 FROM dual
+        ]]>
+    </select>
+    <select id="getDelegationTokensMinId" resultType="int">
+        <![CDATA[
+            SELECT 0 FROM dual
+        ]]>
+    </select>
+    <insert id="batchInsertDelegationTokens" parameterType="java.util.Map">
+        INSERT INTO DELEGATION_TOKENS (`TOKEN_IDENT`,`TOKEN`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.token_ident}, #{item.token}} )
+        </foreach>
+    </insert>
+    <delete id="rollbackDelegationTokens" parameterType="java.util.Map">
+        SELECT 0 FROM dual
+    </delete>
+
+    <!--compaction_queue-->
+    <select id='getCompactionQueueRecords' resultType='com.netease.hivetools.meta.CompactionQueue'>
+        <![CDATA[
+            SELECT * FROM COMPACTION_QUEUE ORDER BY CQ_ID
+        ]]>
+    </select>
+    <select id="getCompactionQueueMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(CQ_ID), 0) FROM COMPACTION_QUEUE
+        ]]>
+    </select>
+    <select id="getCompactionQueueMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(CQ_ID), 0) FROM COMPACTION_QUEUE
+        ]]>
+    </select>
+    <insert id="batchInsertCompactionQueue" parameterType="java.util.Map">
+        INSERT INTO COMPACTION_QUEUE (`CQ_ID`,`CQ_DATABASE`,`CQ_TABLE`,`CQ_PARTITION`,`CQ_STATE`,`CQ_TYPE`,`CQ_WORKER_ID`,`CQ_START`,`CQ_RUN_AS`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.COMPACTION_QUEUE} + #{item.cq_id}, #{item.cq_database}, #{item.cq_table}, #{item.cq_partition}, #{item.cq_state}, #{item.cq_type}, #{item.cq_worker_id}, #{item.cq_start}, #{item.cq_run_as})
+        </foreach>
+    </insert>
+    <delete id="rollbackCompactionQueue" parameterType="java.util.Map">
+        DELETE FROM COMPACTION_QUEUE WHERE CQ_ID > ${mapPlusId.COMPACTION_QUEUE}
+    </delete>
+
+    <!--COMPLETED_TXN_COMPONENTS-->
+    <select id='getCompletedTxnComponentsRecords' resultType='com.netease.hivetools.meta.CompletedTxnComponents'>
+        <![CDATA[
+            SELECT * FROM COMPLETED_TXN_COMPONENTS ORDER BY CTC_TXNID
+        ]]>
+    </select>
+    <select id="getCompletedTxnComponentsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(CTC_TXNID), 0) FROM COMPLETED_TXN_COMPONENTS
+        ]]>
+    </select>
+    <select id="getCompletedTxnComponentsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(CTC_TXNID), 0) FROM COMPLETED_TXN_COMPONENTS
+        ]]>
+    </select>
+    <insert id="batchInsertCompletedTxnComponents" parameterType="java.util.Map">
+        INSERT INTO COMPLETED_TXN_COMPONENTS (`CTC_TXNID`,`CTC_DATABASE`,`CTC_TABLE`,`CTC_PARTITION`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.COMPLETED_TXN_COMPONENTS} + #{item.ctc_txnid}, #{item.ctc_database}, #{item.ctc_table}, #{item.ctc_partition})
+        </foreach>
+    </insert>
+    <delete id="rollbackCompletedTxnComponents" parameterType="java.util.Map">
+        DELETE FROM COMPLETED_TXN_COMPONENTS WHERE CTC_TXNID > ${mapPlusId.COMPLETED_TXN_COMPONENTS}
+    </delete>
+
+    <!--GLOBAL_PRIVS-->
+    <select id='getGlobalPrivsRecords' resultType='com.netease.hivetools.meta.GlobalPrivs'>
+        <![CDATA[
+            SELECT * FROM GLOBAL_PRIVS ORDER BY USER_GRANT_ID
+        ]]>
+    </select>
+    <select id="getGlobalPrivsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(USER_GRANT_ID), 0) FROM GLOBAL_PRIVS
+        ]]>
+    </select>
+    <select id="getGlobalPrivsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(USER_GRANT_ID), 0) FROM GLOBAL_PRIVS
+        ]]>
+    </select>
+    <insert id="batchInsertGlobalPrivs" parameterType="java.util.Map">
+        INSERT INTO GLOBAL_PRIVS (`USER_GRANT_ID`,`CREATE_TIME`,`GRANT_OPTION`,`GRANTOR`,`GRANTOR_TYPE`,`PRINCIPAL_NAME`,`PRINCIPAL_TYPE`,`USER_PRIV`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.GLOBAL_PRIVS} + #{item.user_grant_id}, #{item.create_time}, #{item.grant_option}, #{item.grantor}, #{item.grantor_type}, #{item.principal_name}, #{item.principal_type}, #{item.user_priv})
+        </foreach>
+    </insert>
+    <delete id="rollbackGlobalPrivs" parameterType="java.util.Map">
+        DELETE FROM GLOBAL_PRIVS WHERE USER_GRANT_ID > ${mapPlusId.GLOBAL_PRIVS}
+    </delete>
+
+    <!--NEXT_TXN_ID-->
+    <select id='getNextTxnIdRecords' resultType='com.netease.hivetools.meta.NextTxnId'>
+        <![CDATA[
+            SELECT * FROM NEXT_TXN_ID ORDER BY NTXN_NEXT
+        ]]>
+    </select>
+    <select id="getNextTxnIdMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(NTXN_NEXT), 0) FROM NEXT_TXN_ID
+        ]]>
+    </select>
+    <select id="getNextTxnIdMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(NTXN_NEXT), 0) FROM NEXT_TXN_ID
+        ]]>
+    </select>
+    <insert id="batchInsertNextTxnId" parameterType="java.util.Map">
+        INSERT INTO NEXT_TXN_ID (`NTXN_NEXT`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.NEXT_TXN_ID} + #{item.ntxn_next})
+        </foreach>
+    </insert>
+    <delete id="rollbackNextTxnId" parameterType="java.util.Map">
+        DELETE FROM NEXT_TXN_ID WHERE NTXN_NEXT > ${mapPlusId.NEXT_TXN_ID}
+    </delete>
+
+    <!--NEXT_LOCK_ID-->
+    <select id='getNextLockIdRecords' resultType='com.netease.hivetools.meta.NextLockId'>
+        <![CDATA[
+            SELECT * FROM NEXT_LOCK_ID ORDER BY NL_NEXT
+        ]]>
+    </select>
+    <select id="getNextLockIdMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(NL_NEXT), 0) FROM NEXT_LOCK_ID
+        ]]>
+    </select>
+    <select id="getNextLockIdMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(NL_NEXT), 0) FROM NEXT_LOCK_ID
+        ]]>
+    </select>
+    <insert id="batchInsertNextLockId" parameterType="java.util.Map">
+        INSERT INTO NEXT_LOCK_ID (`NL_NEXT`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.NEXT_LOCK_ID} + #{item.nl_next})
+        </foreach>
+    </insert>
+    <delete id="rollbackNextLockId" parameterType="java.util.Map">
+        DELETE FROM NEXT_LOCK_ID WHERE NL_NEXT > ${mapPlusId.NEXT_LOCK_ID}
+    </delete>
+
+    <!--NEXT_COMPACTION_QUEUE_ID-->
+    <select id='getNextCompactionQueueIdRecords' resultType='com.netease.hivetools.meta.NextCompactionQueueId'>
+        <![CDATA[
+            SELECT * FROM NEXT_COMPACTION_QUEUE_ID ORDER BY NCQ_NEXT
+        ]]>
+    </select>
+    <select id="getNextCompactionQueueIdMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(NCQ_NEXT), 0) FROM NEXT_COMPACTION_QUEUE_ID
+        ]]>
+    </select>
+    <select id="getNextCompactionQueueIdMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(NCQ_NEXT), 0) FROM NEXT_COMPACTION_QUEUE_ID
+        ]]>
+    </select>
+    <insert id="batchInsertNextCompactionQueueId" parameterType="java.util.Map">
+        INSERT INTO NEXT_COMPACTION_QUEUE_ID (`NCQ_NEXT`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.NEXT_COMPACTION_QUEUE_ID} + #{item.ncq_next})
+        </foreach>
+    </insert>
+    <delete id="rollbackNextCompactionQueueId" parameterType="java.util.Map">
+        DELETE FROM NEXT_COMPACTION_QUEUE_ID WHERE NCQ_NEXT > ${mapPlusId.NEXT_COMPACTION_QUEUE_ID}
+    </delete>
+
+    <!--HIVE_LOCKS-->
+    <select id='getHiveLocksRecords' resultType='com.netease.hivetools.meta.HiveLocks'>
+        <![CDATA[
+            SELECT * FROM HIVE_LOCKS ORDER BY HL_LOCK_EXT_ID
+        ]]>
+    </select>
+    <select id="getHiveLocksMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(HL_LOCK_EXT_ID), 0) FROM HIVE_LOCKS
+        ]]>
+    </select>
+    <select id="getHiveLocksMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(HL_LOCK_EXT_ID), 0) FROM HIVE_LOCKS
+        ]]>
+    </select>
+    <insert id="batchInsertHiveLocks" parameterType="java.util.Map">
+        INSERT INTO HIVE_LOCKS (`HL_LOCK_EXT_ID`,`HL_LOCK_INT_ID`,`HL_TXNID`,`HL_DB`,`HL_TABLE`,`HL_PARTITION`,`HL_LOCK_STATE`,`HL_LOCK_TYPE`,`HL_LAST_HEARTBEAT`,`HL_ACQUIRED_AT`,`HL_USER`,`HL_HOST`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.HIVE_LOCKS} + #{item.hl_lock_ext_id}, #{item.hl_lock_int_id}, #{item.hl_txnid}, #{item.hl_db}, #{item.hl_table}, #{item.hl_partition}, #{item.hl_lock_state}, #{item.hl_lock_type}, #{item.hl_last_heartbeat}, #{item.hl_acquired_at}, #{item.hl_user}, #{item.hl_host})
+        </foreach>
+    </insert>
+    <delete id="rollbackHiveLocks" parameterType="java.util.Map">
+        DELETE FROM HIVE_LOCKS WHERE HL_LOCK_EXT_ID > ${mapPlusId.HIVE_LOCKS}
+    </delete>
+
+    <!--MASTER_KEYS-->
+    <select id='getMasterKeysRecords' resultType='com.netease.hivetools.meta.MasterKeys'>
+        <![CDATA[
+            SELECT * FROM MASTER_KEYS ORDER BY KEY_ID
+        ]]>
+    </select>
+    <select id="getMasterKeysMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(KEY_ID), 0) FROM MASTER_KEYS
+        ]]>
+    </select>
+    <select id="getMasterKeysMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(KEY_ID), 0) FROM MASTER_KEYS
+        ]]>
+    </select>
+    <insert id="batchInsertMasterKeys" parameterType="java.util.Map">
+        INSERT INTO MASTER_KEYS (`KEY_ID`,`MASTER_KEY`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.MASTER_KEYS} + #{item.key_id}, #{item.master_key})
+        </foreach>
+    </insert>
+    <delete id="rollbackMasterKeys" parameterType="java.util.Map">
+        DELETE FROM MASTER_KEYS WHERE KEY_ID > ${mapPlusId.MASTER_KEYS}
+    </delete>
+
+    <!--NOTIFICATION_LOG-->
+    <select id='getNotificationLogRecords' resultType='com.netease.hivetools.meta.NotificationLog'>
+        <![CDATA[
+            SELECT * FROM NOTIFICATION_LOG ORDER BY NL_ID
+        ]]>
+    </select>
+    <select id="getNotificationLogMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(NL_ID), 0) FROM NOTIFICATION_LOG
+        ]]>
+    </select>
+    <select id="getNotificationLogMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(NL_ID), 0) FROM NOTIFICATION_LOG
+        ]]>
+    </select>
+    <insert id="batchInsertNotificationLog" parameterType="java.util.Map">
+        INSERT INTO NOTIFICATION_LOG (`NL_ID`,`EVENT_ID`,`EVENT_TIME`,`EVENT_TYPE`,`DB_NAME`,`TBL_NAME`,`MESSAGE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.NOTIFICATION_LOG} + #{item.nl_id}, #{item.event_id}, #{item.event_time}, #{item.event_type}, #{item.db_name}, #{item.tbl_name}, #{item.message})
+        </foreach>
+    </insert>
+    <delete id="rollbackNotificationLog" parameterType="java.util.Map">
+        DELETE FROM NOTIFICATION_LOG WHERE NL_ID > ${mapPlusId.NOTIFICATION_LOG}
+    </delete>
+
+    <!--NOTIFICATION_SEQUENCE-->
+    <select id='getNotificationSequenceRecords' resultType='com.netease.hivetools.meta.NotificationSequence'>
+        <![CDATA[
+            SELECT * FROM NOTIFICATION_SEQUENCE ORDER BY NNI_ID
+        ]]>
+    </select>
+    <select id="getNotificationSequenceMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(NNI_ID), 0) FROM NOTIFICATION_SEQUENCE
+        ]]>
+    </select>
+    <select id="getNotificationSequenceMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(NNI_ID), 0) FROM NOTIFICATION_SEQUENCE
+        ]]>
+    </select>
+    <insert id="batchInsertNotificationSequence" parameterType="java.util.Map">
+        INSERT INTO NOTIFICATION_SEQUENCE (`NNI_ID`,`NEXT_EVENT_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.NOTIFICATION_SEQUENCE} + #{item.nni_id}, #{item.next_event_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackNotificationSequence" parameterType="java.util.Map">
+        DELETE FROM NOTIFICATION_SEQUENCE WHERE NNI_ID > ${mapPlusId.NOTIFICATION_SEQUENCE}
+    </delete>
+
+    <!--NUCLEUS_TABLES-->
+    <select id='getNucleusTablesRecords' resultType='com.netease.hivetools.meta.NucleusTables'>
+        <![CDATA[
+            SELECT * FROM NUCLEUS_TABLES ORDER BY CLASS_NAME
+        ]]>
+    </select>
+    <select id="getNucleusTablesMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(CLASS_NAME), 0) FROM NUCLEUS_TABLES
+        ]]>
+    </select>
+    <select id="getNucleusTablesMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(CLASS_NAME), 0) FROM NUCLEUS_TABLES
+        ]]>
+    </select>
+    <insert id="batchInsertNucleusTables" parameterType="java.util.Map">
+        INSERT INTO NUCLEUS_TABLES (`CLASS_NAME`,`TABLE_NAME`,`TYPE`,`OWNER`,`VERSION`,`INTERFACE_NAME`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.NUCLEUS_TABLES} + #{item.class_name}, #{item.table_name}, #{item.type}, #{item.owner}, #{item.version}, #{item.interface_name})
+        </foreach>
+    </insert>
+    <delete id="rollbackNucleusTables" parameterType="java.util.Map">
+        DELETE FROM NUCLEUS_TABLES WHERE CLASS_NAME > ${mapPlusId.NUCLEUS_TABLES}
+    </delete>
+
+    <!--PARTITIONS-->
+    <select id='getPartitionsRecords' resultType='com.netease.hivetools.meta.Partitions'>
+        <![CDATA[
+            SELECT * FROM PARTITIONS ORDER BY PART_ID
+        ]]>
+    </select>
+    <select id='getPagingPartitionsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Partitions'>
+        <![CDATA[
+            SELECT * FROM PARTITIONS WHERE PART_ID >= ${mapPagindId.startId} AND PART_ID < ${mapPagindId.endId}
+        ]]>
+    </select>
+    <select id="getPartitionsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(PART_ID), 0) FROM PARTITIONS
+        ]]>
+    </select>
+    <select id="getPartitionsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(PART_ID), 0) FROM PARTITIONS
+        ]]>
+    </select>
+    <insert id="batchInsertPartitions" parameterType="java.util.Map">
+        INSERT INTO PARTITIONS (`PART_ID`,`CREATE_TIME`,`LAST_ACCESS_TIME`,`PART_NAME`,`SD_ID`,
+                                `TBL_ID`,`LINK_TARGET_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.create_time}, #{item.last_access_time}, #{item.part_name},
+            ${mapPlusId.SDS} + #{item.sd_id}, ${mapPlusId.TBLS} + #{item.tbl_id}, ${mapPlusId.PARTITIONS} + #{item.link_target_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartitions" parameterType="java.util.Map">
+        DELETE FROM PARTITIONS WHERE PART_ID > ${mapPlusId.PARTITIONS}
+    </delete>
+
+    <!--PARTITION_EVENTS-->
+    <select id='getPartitionEventsRecords' resultType='com.netease.hivetools.meta.PartitionEvents'>
+        <![CDATA[
+            SELECT * FROM PARTITION_EVENTS ORDER BY PART_NAME_ID
+        ]]>
+    </select>
+    <select id="getPartitionEventsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(PART_NAME_ID), 0) FROM PARTITION_EVENTS
+        ]]>
+    </select>
+    <select id="getPartitionEventsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(PART_NAME_ID), 0) FROM PARTITION_EVENTS
+        ]]>
+    </select>
+    <insert id="batchInsertPartitionEvents" parameterType="java.util.Map">
+        INSERT INTO PARTITION_EVENTS (`PART_NAME_ID`,`DB_NAME`,`EVENT_TIME`,`EVENT_TYPE`,`PARTITION_NAME`,`TBL_NAME`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.PARTITION_EVENTS} + #{item.part_name_id}, #{item.db_name}, #{item.event_time}, #{item.event_type}, #{item.partition_name}, #{item.tbl_name})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartitionEvents" parameterType="java.util.Map">
+        DELETE FROM PARTITION_EVENTS WHERE PART_NAME_ID > ${mapPlusId.PARTITION_EVENTS}
+    </delete>
+
+    <!--PARTITION_KEYS-->
+    <select id='getPartitionKeysRecords' resultType='com.netease.hivetools.meta.PartitionKeys'>
+        <![CDATA[
+            SELECT * FROM PARTITION_KEYS ORDER BY TBL_ID, PKEY_NAME
+        ]]>
+    </select>
+    <select id="getPartitionKeysMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TBL_ID), 0) FROM PARTITION_KEYS
+        ]]>
+    </select>
+    <select id="getPartitionKeysMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TBL_ID), 0) FROM PARTITION_KEYS
+        ]]>
+    </select>
+    <insert id="batchInsertPartitionKeys" parameterType="java.util.Map">
+        INSERT INTO PARTITION_KEYS (`TBL_ID`,`PKEY_COMMENT`,`PKEY_NAME`,`PKEY_TYPE`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TBLS} + #{item.tbl_id}, #{item.pkey_comment}, #{item.pkey_name}, #{item.pkey_type}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartitionKeys" parameterType="java.util.Map">
+        DELETE FROM PARTITION_KEYS WHERE TBL_ID > ${mapPlusId.PARTITION_KEYS}
+    </delete>
+
+    <!--PARTITION_KEY_VALS-->
+    <select id='getPartitionKeyValsRecords' resultType='com.netease.hivetools.meta.PartitionKeyVals'>
+        <![CDATA[
+            SELECT * FROM PARTITION_KEY_VALS ORDER BY PART_ID, INTEGER_IDX
+        ]]>
+    </select>
+    <select id='getPagingPartitionKeyValsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.PartitionKeyVals'>
+        <![CDATA[
+            SELECT * FROM PARTITION_KEY_VALS WHERE PART_ID >= ${mapPagindId.startId} AND PART_ID < ${mapPagindId.endId}
+        ]]>
+    </select>
+    <select id="getPartitionKeyValsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(PART_ID), 0) FROM PARTITION_KEY_VALS
+        ]]>
+    </select>
+    <select id="getPartitionKeyValsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(PART_ID), 0) FROM PARTITION_KEY_VALS
+        ]]>
+    </select>
+    <insert id="batchInsertPartitionKeyVals" parameterType="java.util.Map">
+        INSERT INTO PARTITION_KEY_VALS (`PART_ID`,`PART_KEY_VAL`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.part_key_val}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartitionKeyVals" parameterType="java.util.Map">
+        DELETE FROM PARTITION_KEY_VALS WHERE PART_ID > ${mapPlusId.PARTITION_KEY_VALS}
+    </delete>
+
+    <!--PARTITION_PARAMS-->
+    <select id='getPartitionParamsRecords' resultType='com.netease.hivetools.meta.PartitionParams'>
+        <![CDATA[
+            SELECT * FROM PARTITION_PARAMS ORDER BY PART_ID, PARAM_KEY
+        ]]>
+    </select>
+    <select id='getPagingPartitionParamsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.PartitionParams'>
+        <![CDATA[
+            SELECT * FROM PARTITION_PARAMS WHERE PART_ID >= ${mapPagindId.startId} AND PART_ID < ${mapPagindId.endId}
+        ]]>
+    </select>
+    <select id="getPartitionParamsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(PART_ID), 0) FROM PARTITION_PARAMS
+        ]]>
+    </select>
+    <select id="getPartitionParamsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(PART_ID), 0) FROM PARTITION_PARAMS
+        ]]>
+    </select>
+    <insert id="batchInsertPartitionParams" parameterType="java.util.Map">
+        INSERT INTO PARTITION_PARAMS (`PART_ID`,`PARAM_KEY`,`PARAM_VALUE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.PARTITION_PARAMS} + #{item.part_id}, #{item.param_key}, #{item.param_value})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartitionParams" parameterType="java.util.Map">
+        DELETE FROM PARTITION_PARAMS WHERE PART_ID > ${mapPlusId.PARTITION_PARAMS}
+    </delete>
+
+    <!--PART_COL_PRIVS-->
+    <select id='getPartColPrivsRecords' resultType='com.netease.hivetools.meta.PartColPrivs'>
+        <![CDATA[
+            SELECT * FROM PART_COL_PRIVS ORDER BY PART_COLUMN_GRANT_ID
+        ]]>
+    </select>
+    <select id="getPartColPrivsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(PART_COLUMN_GRANT_ID), 0) FROM PART_COL_PRIVS
+        ]]>
+    </select>
+    <select id="getPartColPrivsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(PART_COLUMN_GRANT_ID), 0) FROM PART_COL_PRIVS
+        ]]>
+    </select>
+    <insert id="batchInsertPartColPrivs" parameterType="java.util.Map">
+        INSERT INTO PART_COL_PRIVS (`PART_COLUMN_GRANT_ID`,`COLUMN_NAME`,`CREATE_TIME`,`GRANT_OPTION`,
+                                    `GRANTOR`,`GRANTOR_TYPE`,`PART_ID`,`PRINCIPAL_NAME`,
+                                    `PRINCIPAL_TYPE`,`PART_COL_PRIV`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.PART_COL_PRIVS} + #{item.part_column_grant_id}, #{item.column_name}, #{item.create_time}, #{item.grant_option},
+            #{item.grantor}, #{item.grantor_type}, ${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.principal_name},
+            #{item.principal_type}, #{item.part_col_priv})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartColPrivs" parameterType="java.util.Map">
+        DELETE FROM PART_COL_PRIVS WHERE PART_COLUMN_GRANT_ID > ${mapPlusId.PART_COL_PRIVS}
+    </delete>
+
+    <!--PART_COL_STATS-->
+    <select id='getPartColStatsRecords' resultType='com.netease.hivetools.meta.PartColStats'>
+        <![CDATA[
+            SELECT * FROM PART_COL_STATS ORDER BY CS_ID
+        ]]>
+    </select>
+    <select id="getPartColStatsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(CS_ID), 0) FROM PART_COL_STATS
+        ]]>
+    </select>
+    <select id="getPartColStatsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(CS_ID), 0) FROM PART_COL_STATS
+        ]]>
+    </select>
+    <insert id="batchInsertPartColStats" parameterType="java.util.Map">
+        INSERT INTO PART_COL_STATS (`CS_ID`,`DB_NAME`,`TABLE_NAME`,`PARTITION_NAME`,`COLUMN_NAME`,
+                                    `COLUMN_TYPE`,`PART_ID`,`LONG_LOW_VALUE`,`LONG_HIGH_VALUE`,`DOUBLE_HIGH_VALUE`,
+                                    `DOUBLE_LOW_VALUE`,`BIG_DECIMAL_LOW_VALUE`,`BIG_DECIMAL_HIGH_VALUE`,`NUM_NULLS`,`NUM_DISTINCTS`,
+                                    `AVG_COL_LEN`,`MAX_COL_LEN`,`NUM_TRUES`,`NUM_FALSES`,`LAST_ANALYZED`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.PART_COL_STATS} + #{item.cs_id}, #{item.db_name}, #{item.table_name}, #{item.partition_name}, #{item.column_name},
+            #{item.column_type}, ${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.long_low_value}, #{item.long_high_value}, #{item.double_high_value},
+            #{item.double_low_value}, #{item.big_decimal_low_value}, #{item.big_decimal_high_value}, #{item.num_nulls}, #{item.num_distincts},
+            #{item.avg_col_len}, #{item.max_col_len}, #{item.num_trues}, #{item.num_falses}, #{item.last_analyzed})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartColStats" parameterType="java.util.Map">
+        DELETE FROM PART_COL_STATS WHERE CS_ID > ${mapPlusId.PART_COL_STATS}
+    </delete>
+
+    <!--PART_PRIVS-->
+    <select id='getPartPrivsRecords' resultType='com.netease.hivetools.meta.PartPrivs'>
+        <![CDATA[
+            SELECT * FROM PART_PRIVS ORDER BY PART_GRANT_ID
+        ]]>
+    </select>
+    <select id="getPartPrivsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(PART_GRANT_ID), 0) FROM PART_PRIVS
+        ]]>
+    </select>
+    <select id="getPartPrivsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(PART_GRANT_ID), 0) FROM PART_PRIVS
+        ]]>
+    </select>
+    <insert id="batchInsertPartPrivs" parameterType="java.util.Map">
+        INSERT INTO PART_PRIVS (`PART_GRANT_ID`,`CREATE_TIME`,`GRANT_OPTION`,`GRANTOR`,`GRANTOR_TYPE`,
+                                `PART_ID`,`PRINCIPAL_NAME`,`PRINCIPAL_TYPE`,`PART_COL_PRIV`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.PART_PRIVS} + #{item.part_grant_id}, #{item.create_time}, #{item.grant_option}, #{item.grantor}, #{item.grantor_type},
+            ${mapPlusId.PARTITIONS} + #{item.part_id}, #{item.principal_name}, #{item.principal_type}, #{item.part_col_priv})
+        </foreach>
+    </insert>
+    <delete id="rollbackPartPrivs" parameterType="java.util.Map">
+        DELETE FROM PART_PRIVS WHERE PART_GRANT_ID > ${mapPlusId.PART_PRIVS}
+    </delete>
+
+    <!--ROLES-->
+    <select id='getRolesRecords' resultType='com.netease.hivetools.meta.Roles'>
+        <![CDATA[
+            SELECT * FROM ROLES ORDER BY ROLE_ID
+        ]]>
+    </select>
+    <select id="getRolesMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(ROLE_ID), 0) FROM ROLES
+        ]]>
+    </select>
+    <select id="getRolesMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(ROLE_ID), 0) FROM ROLES
+        ]]>
+    </select>
+    <insert id="batchInsertRoles" parameterType="java.util.Map">
+        INSERT INTO ROLES (`ROLE_ID`,`CREATE_TIME`,`OWNER_NAME`,`ROLE_NAME`) VALUES
+        <!--foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.ROLES} + #{item.role_id}, #{item.create_time}, #{item.owner_name}, #{item.role_name}))
+        </foreach-->
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.ROLES} + #{item.role_id}, #{item.create_time}, #{item.owner_name}, CONCAT(#{item.role_name},'_','${mapPlusId.sourceName}'))
+        </foreach>
+    </insert>
+    <select id="checkUniqueKeyRoles" parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Roles'>
+        SELECT `ROLE_NAME` FROM ROLES WHERE `ROLE_NAME` IN
+        <foreach collection="list" item="item"  open="(" separator="," close=")">
+            #{item.role_name}
+        </foreach>
+    </select>
+    <delete id="rollbackRoles" parameterType="java.util.Map">
+        DELETE FROM ROLES WHERE ROLE_ID > ${mapPlusId.ROLES}
+    </delete>
+
+    <!--ROLE_MAP-->
+    <select id='getRoleMapRecords' resultType='com.netease.hivetools.meta.RoleMap'>
+        <![CDATA[
+            SELECT * FROM ROLE_MAP ORDER BY ROLE_GRANT_ID
+        ]]>
+    </select>
+    <select id="getRoleMapMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(ROLE_GRANT_ID), 0) FROM ROLE_MAP
+        ]]>
+    </select>
+    <select id="getRoleMapMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(ROLE_GRANT_ID), 0) FROM ROLE_MAP
+        ]]>
+    </select>
+    <insert id="batchInsertRoleMap" parameterType="java.util.Map">
+        INSERT INTO ROLE_MAP (`ROLE_GRANT_ID`,`ADD_TIME`,`GRANT_OPTION`,`GRANTOR`,`GRANTOR_TYPE`,
+        `PRINCIPAL_NAME`,`PRINCIPAL_TYPE`,`ROLE_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.ROLE_MAP} + #{item.role_grant_id}, #{item.add_time}, #{item.grant_option}, #{item.grantor}, #{item.grantor_type},
+            #{item.principal_name}, #{item.principal_type}, ${mapPlusId.ROLES} + #{item.role_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackRoleMap" parameterType="java.util.Map">
+        DELETE FROM ROLE_MAP WHERE ROLE_GRANT_ID > ${mapPlusId.ROLE_MAP}
+    </delete>
+
+    <!--SDS-->
+    <select id='getSdsRecords' resultType='com.netease.hivetools.meta.Sds'>
+        <![CDATA[
+            SELECT * FROM SDS ORDER BY SD_ID
+        ]]>
+    </select>
+    <select id='getPagingSdsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Sds'>
+        <![CDATA[
+            SELECT * FROM SDS WHERE SD_ID >= ${mapPagindId.startId} AND SD_ID < ${mapPagindId.endId}
+        ]]>
+    </select>
+    <select id="getSdsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SD_ID), 0) FROM SDS
+        ]]>
+    </select>
+    <select id="getSdsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SD_ID), 0) FROM SDS
+        ]]>
+    </select>
+    <insert id="batchInsertSds" parameterType="java.util.Map">
+        INSERT INTO SDS (`SD_ID`,`CD_ID`,`INPUT_FORMAT`,`IS_COMPRESSED`,`IS_STOREDASSUBDIRECTORIES`,
+        `LOCATION`,`NUM_BUCKETS`,`OUTPUT_FORMAT`,`SERDE_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SDS} + #{item.sd_id}, ${mapPlusId.CDS} + #{item.cd_id}, #{item.input_format}, #{item.is_compressed}, #{item.is_storedassubdirectories},
+            #{item.location}, #{item.num_buckets}, #{item.output_format}, ${mapPlusId.SERDES} + #{item.serde_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackSds" parameterType="java.util.Map">
+        DELETE FROM SDS WHERE SD_ID > ${mapPlusId.SDS}
+    </delete>
+
+    <!--SD_PARAMS-->
+    <select id='getSdParamsRecords' resultType='com.netease.hivetools.meta.SdParams'>
+        <![CDATA[
+            SELECT * FROM SD_PARAMS ORDER BY SD_ID
+        ]]>
+    </select>
+    <select id="getSdParamsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SD_ID), 0) FROM SD_PARAMS
+        ]]>
+    </select>
+    <select id="getSdParamsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SD_ID), 0) FROM SD_PARAMS
+        ]]>
+    </select>
+    <insert id="batchInsertSdParams" parameterType="java.util.Map">
+        INSERT INTO SD_PARAMS (`SD_ID`,`PARAM_KEY`,`PARAM_VALUE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SDS} + #{item.sd_id}, #{item.param_key}, #{item.param_value})
+        </foreach>
+    </insert>
+    <delete id="rollbackSdParams" parameterType="java.util.Map">
+        DELETE FROM SD_PARAMS WHERE SD_ID > ${mapPlusId.SD_PARAMS}
+    </delete>
+
+    <!--SEQUENCE_TABLE-->
+    <select id='getSequenceTableRecords' resultType='com.netease.hivetools.meta.SequenceTable'>
+        <![CDATA[
+            SELECT * FROM SEQUENCE_TABLE ORDER BY SEQUENCE_NAME
+        ]]>
+    </select>
+    <select id="getSequenceTableMaxId" resultType="int">
+        <![CDATA[
+            SELECT 0 FROM dual
+        ]]>
+    </select>
+    <select id="getSequenceTableMinId" resultType="int">
+        <![CDATA[
+            SELECT 0 FROM dual
+        ]]>
+    </select>
+    <insert id="batchInsertSequenceTable" parameterType="java.util.Map">
+        INSERT INTO SEQUENCE_TABLE (`SEQUENCE_NAME`,`NEXT_VAL`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (#{item.sequence_name}, #{item.next_val})
+        </foreach>
+    </insert>
+    <update id="updateSequenceTable">
+        update SEQUENCE_TABLE set NEXT_VAL=(select max(CD_ID)+5 from COLUMNS_V2) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MColumnDescriptor';
+        update SEQUENCE_TABLE set NEXT_VAL=(select max(DB_ID)+5 from DBS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MDatabase';
+        update SEQUENCE_TABLE set NEXT_VAL=(select max(FUNC_ID)+5 from FUNCS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MFunction';
+        <!--'org.apache.hadoop.hive.metastore.model.MGlobalPrivilege'-->
+        update SEQUENCE_TABLE set NEXT_VAL=(select max(PART_ID)+5 from PARTITIONS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MPartition';
+        <!--'org.apache.hadoop.hive.metastore.model.MRole'-->
+        <!--'org.apache.hadoop.hive.metastore.model.MRoleMap'-->
+        update SEQUENCE_TABLE set NEXT_VAL=(select max(SERDE_ID)+5 from SERDES) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MSerDeInfo';
+        update SEQUENCE_TABLE set NEXT_VAL=(select max(SD_ID)+5 from SDS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MStorageDescriptor';
+        update SEQUENCE_TABLE set NEXT_VAL=(select max(TBL_ID)+5 from TBLS) where SEQUENCE_NAME='org.apache.hadoop.hive.metastore.model.MTable';
+        <!--'org.apache.hadoop.hive.metastore.model.MTablePrivilege'-->
+        <!--'org.apache.hadoop.hive.metastore.model.MVersionTable'-->
+    </update>
+    <delete id="rollbackSequenceTable" parameterType="java.util.Map">
+        SELECT 0 FROM dual
+    </delete>
+
+    <!--SERDES-->
+    <select id='getSerdesRecords' resultType='com.netease.hivetools.meta.Serdes'>
+        <![CDATA[
+            SELECT * FROM SERDES ORDER BY SERDE_ID
+        ]]>
+    </select>
+    <select id='getPagingSerdesRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Serdes'>
+        <![CDATA[
+            SELECT * FROM SERDES WHERE SERDE_ID >= ${mapPagindId.startId} AND SERDE_ID < ${mapPagindId.endId}
+        ]]>
+    </select>
+    <select id="getSerdesMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SERDE_ID), 0) FROM SERDES
+        ]]>
+    </select>
+    <select id="getSerdesMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SERDE_ID), 0) FROM SERDES
+        ]]>
+    </select>
+    <insert id="batchInsertSerdes" parameterType="java.util.Map">
+        INSERT INTO SERDES (`SERDE_ID`,`NAME`,`SLIB`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SERDES} + #{item.serde_id}, #{item.name}, #{item.slib})
+        </foreach>
+    </insert>
+    <delete id="rollbackSerdes" parameterType="java.util.Map">
+        DELETE FROM SERDES WHERE SERDE_ID > ${mapPlusId.SERDES}
+    </delete>
+
+    <!--SERDE_PARAMS-->
+    <select id='getSerdeParamsRecords' resultType='com.netease.hivetools.meta.SerdeParams'>
+        <![CDATA[
+            SELECT * FROM SERDE_PARAMS ORDER BY SERDE_ID
+        ]]>
+    </select>
+    <select id='getPagingSerdeParamsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.SerdeParams'>
+        <![CDATA[
+            SELECT * FROM SERDE_PARAMS WHERE SERDE_ID >= ${mapPagindId.startId} AND SERDE_ID < ${mapPagindId.endId}
+        ]]>
+    </select>
+    <select id="getSerdeParamsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SERDE_ID), 0) FROM SERDE_PARAMS
+        ]]>
+    </select>
+    <select id="getSerdeParamsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SERDE_ID), 0) FROM SERDE_PARAMS
+        ]]>
+    </select>
+    <insert id="batchInsertSerdeParams" parameterType="java.util.Map">
+        INSERT INTO SERDE_PARAMS (`SERDE_ID`,`PARAM_KEY`,`PARAM_VALUE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SERDES} + #{item.serde_id}, #{item.param_key}, #{item.param_value})
+        </foreach>
+    </insert>
+    <delete id="rollbackSerdeParams" parameterType="java.util.Map">
+        DELETE FROM SERDE_PARAMS WHERE SERDE_ID > ${mapPlusId.SERDE_PARAMS}
+    </delete>
+
+    <!--SKEWED_COL_NAMES-->
+    <select id='getSkewedColNamesRecords' resultType='com.netease.hivetools.meta.SkewedColNames'>
+        <![CDATA[
+            SELECT * FROM SKEWED_COL_NAMES ORDER BY SD_ID, INTEGER_IDX
+        ]]>
+    </select>
+    <select id="getSkewedColNamesMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SD_ID), 0) FROM SKEWED_COL_NAMES
+        ]]>
+    </select>
+    <select id="getSkewedColNamesMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SD_ID), 0) FROM SKEWED_COL_NAMES
+        ]]>
+    </select>
+    <insert id="batchInsertSkewedColNames" parameterType="java.util.Map">
+        INSERT INTO SKEWED_COL_NAMES (`SD_ID`,`SKEWED_COL_NAME`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SDS} + #{item.sd_id}, #{item.skewed_col_name}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackSkewedColNames" parameterType="java.util.Map">
+        DELETE FROM SKEWED_COL_NAMES WHERE SD_ID > ${mapPlusId.SKEWED_COL_NAMES}
+    </delete>
+
+    <!--SKEWED_COL_VALUE_LOC_MAP-->
+    <select id='getSkewedColValueLocMapRecords' resultType='com.netease.hivetools.meta.SkewedColValueLocMap'>
+        <![CDATA[
+            SELECT * FROM SKEWED_COL_VALUE_LOC_MAP ORDER BY SD_ID
+        ]]>
+    </select>
+    <select id="getSkewedColValueLocMapMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SD_ID), 0) FROM SKEWED_COL_VALUE_LOC_MAP
+        ]]>
+    </select>
+    <select id="getSkewedColValueLocMapMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SD_ID), 0) FROM SKEWED_COL_VALUE_LOC_MAP
+        ]]>
+    </select>
+    <insert id="batchInsertSkewedColValueLocMap" parameterType="java.util.Map">
+        INSERT INTO SKEWED_COL_VALUE_LOC_MAP (`SD_ID`,`STRING_LIST_ID_KID`,`LOCATION`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SDS} + #{item.sd_id}, ${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id_kid}, #{item.location})
+        </foreach>
+    </insert>
+    <delete id="rollbackSkewedColValueLocMap" parameterType="java.util.Map">
+        DELETE FROM SKEWED_COL_VALUE_LOC_MAP WHERE SD_ID > ${mapPlusId.SKEWED_COL_VALUE_LOC_MAP}
+    </delete>
+
+    <!--FUNCS-->
+    <select id='getFuncsRecords' resultType='com.netease.hivetools.meta.Funcs'>
+        <![CDATA[
+            SELECT * FROM FUNCS ORDER BY FUNC_ID
+        ]]>
+    </select>
+    <select id="getFuncsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(FUNC_ID), 0) FROM FUNCS
+        ]]>
+    </select>
+    <select id="getFuncsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(FUNC_ID), 0) FROM FUNCS
+        ]]>
+    </select>
+    <insert id="batchInsertFuncs" parameterType="java.util.Map">
+        INSERT INTO FUNCS (`FUNC_ID`,`CLASS_NAME`,`CREATE_TIME`,`DB_ID`,`FUNC_NAME`,
+        `FUNC_TYPE`,`OWNER_NAME`,`OWNER_TYPE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.FUNCS} + #{item.func_id}, #{item.class_name}, #{item.create_time}, ${mapPlusId.DBS} + #{item.db_id}, #{item.func_name},
+            #{item.func_type}, #{item.owner_name}, #{item.owner_type})
+        </foreach>
+    </insert>
+    <delete id="rollbackFuncs" parameterType="java.util.Map">
+        DELETE FROM FUNCS WHERE FUNC_ID > ${mapPlusId.FUNCS}
+    </delete>
+
+    <!--FUNC_RU-->
+    <select id='getFuncRuRecords' resultType='com.netease.hivetools.meta.FuncRu'>
+        <![CDATA[
+            SELECT * FROM FUNC_RU ORDER BY FUNC_ID
+        ]]>
+    </select>
+    <select id="getFuncRuMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(FUNC_ID), 0) FROM FUNC_RU
+        ]]>
+    </select>
+    <select id="getFuncRuMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(FUNC_ID), 0) FROM FUNC_RU
+        ]]>
+    </select>
+    <insert id="batchInsertFuncRu" parameterType="java.util.Map">
+        INSERT INTO FUNC_RU (`FUNC_ID`,`RESOURCE_TYPE`,`RESOURCE_URI`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.FUNC} + #{item.func_id}, #{item.resource_type}, #{item.resource_uri}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackFuncRu" parameterType="java.util.Map">
+        DELETE FROM FUNC_RU WHERE FUNC_ID > ${mapPlusId.FUNC_RU}
+    </delete>
+
+    <!--IDXS-->
+    <select id='getIdxsRecords' resultType='com.netease.hivetools.meta.Idxs'>
+        <![CDATA[
+            SELECT * FROM IDXS ORDER BY INDEX_ID
+        ]]>
+    </select>
+    <select id="getIdxsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(INDEX_ID), 0) FROM IDXS
+        ]]>
+    </select>
+    <select id="getIdxsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(INDEX_ID), 0) FROM IDXS
+        ]]>
+    </select>
+    <insert id="batchInsertIdxs" parameterType="java.util.Map">
+        INSERT INTO IDXS (`INDEX_ID`,`CREATE_TIME`,`DEFERRED_REBUILD`,`INDEX_HANDLER_CLASS`,`INDEX_NAME`,
+        `INDEX_TBL_ID`,`LAST_ACCESS_TIME`,`ORIG_TBL_ID`,`SD_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.IDXS} + #{item.index_id}, #{item.create_time}, #{item.deferred_rebuild}, #{item.index_handler_class}, #{item.index_name},
+            ${mapPlusId.TBLS} + #{item.index_tbl_id}, #{item.last_access_time}, ${mapPlusId.TBLS} + #{item.orig_tbl_id}, ${mapPlusId.SDS} + #{item.sd_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackIdxs" parameterType="java.util.Map">
+        DELETE FROM IDXS WHERE INDEX_ID > ${mapPlusId.IDXS}
+    </delete>
+
+    <!--INDEX_PARAMS-->
+    <select id='getIndexParamsRecords' resultType='com.netease.hivetools.meta.IndexParams'>
+        <![CDATA[
+            SELECT * FROM INDEX_PARAMS ORDER BY INDEX_ID
+        ]]>
+    </select>
+    <select id="getIndexParamsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(INDEX_ID), 0) FROM INDEX_PARAMS
+        ]]>
+    </select>
+    <select id="getIndexParamsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(INDEX_ID), 0) FROM INDEX_PARAMS
+        ]]>
+    </select>
+    <insert id="batchInsertIndexParams" parameterType="java.util.Map">
+        INSERT INTO INDEX_PARAMS (`INDEX_ID`,`PARAM_KEY`,`PARAM_VALUE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.IDXS} + #{item.index_id}, #{item.param_key}, #{item.param_value})
+        </foreach>
+    </insert>
+    <delete id="rollbackIndexParams" parameterType="java.util.Map">
+        DELETE FROM INDEX_PARAMS WHERE INDEX_ID > ${mapPlusId.INDEX_PARAMS}
+    </delete>
+
+    <!--SKEWED_STRING_LIST-->
+    <select id='getSkewedStringListRecords' resultType='com.netease.hivetools.meta.SkewedStringList'>
+        <![CDATA[
+            SELECT * FROM SKEWED_STRING_LIST ORDER BY STRING_LIST_ID
+        ]]>
+    </select>
+    <select id="getSkewedStringListMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(STRING_LIST_ID), 0) FROM SKEWED_STRING_LIST
+        ]]>
+    </select>
+    <select id="getSkewedStringListMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(STRING_LIST_ID), 0) FROM SKEWED_STRING_LIST
+        ]]>
+    </select>
+    <insert id="batchInsertSkewedStringList" parameterType="java.util.Map">
+        INSERT INTO SKEWED_STRING_LIST (`STRING_LIST_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackSkewedStringList" parameterType="java.util.Map">
+        DELETE FROM SKEWED_STRING_LIST WHERE STRING_LIST_ID > ${mapPlusId.SKEWED_STRING_LIST}
+    </delete>
+
+    <!--SKEWED_STRING_LIST_VALUES-->
+    <select id='getSkewedStringListValuesRecords' resultType='com.netease.hivetools.meta.SkewedStringListValues'>
+        <![CDATA[
+            SELECT * FROM SKEWED_STRING_LIST_VALUES ORDER BY STRING_LIST_ID, INTEGER_IDX
+        ]]>
+    </select>
+    <select id="getSkewedStringListValuesMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(STRING_LIST_ID), 0) FROM SKEWED_STRING_LIST_VALUES
+        ]]>
+    </select>
+    <select id="getSkewedStringListValuesMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(STRING_LIST_ID), 0) FROM SKEWED_STRING_LIST_VALUES
+        ]]>
+    </select>
+    <insert id="batchInsertSkewedStringListValues" parameterType="java.util.Map">
+        INSERT INTO SKEWED_STRING_LIST_VALUES (`STRING_LIST_ID`,`STRING_LIST_VALUE`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id}, #{item.string_list_value}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackSkewedStringListValues" parameterType="java.util.Map">
+        DELETE FROM SKEWED_STRING_LIST_VALUES WHERE STRING_LIST_ID > ${mapPlusId.SKEWED_STRING_LIST_VALUES}
+    </delete>
+
+    <!--SKEWED_VALUES-->
+    <select id='getSkewedValuesRecords' resultType='com.netease.hivetools.meta.SkewedValues'>
+        <![CDATA[
+            SELECT * FROM SKEWED_VALUES ORDER BY SD_ID_OID, INTEGER_IDX
+        ]]>
+    </select>
+    <select id="getSkewedValuesMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SD_ID_OID), 0) FROM SKEWED_VALUES
+        ]]>
+    </select>
+    <select id="getSkewedValuesMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SD_ID_OID), 0) FROM SKEWED_VALUES
+        ]]>
+    </select>
+    <insert id="batchInsertSkewedValues" parameterType="java.util.Map">
+        INSERT INTO SKEWED_VALUES (`SD_ID_OID`,`STRING_LIST_ID_EID`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SDS} + #{item.sd_id_oid}, ${mapPlusId.SKEWED_STRING_LIST} + #{item.string_list_id_eid}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackSkewedValues" parameterType="java.util.Map">
+        DELETE FROM SKEWED_VALUES WHERE SD_ID_OID > ${mapPlusId.SKEWED_VALUES}
+    </delete>
+
+    <!--SORT_COLS-->
+    <select id='getSortColsRecords' resultType='com.netease.hivetools.meta.SortCols'>
+        <![CDATA[
+            SELECT * FROM SORT_COLS ORDER BY SD_ID, INTEGER_IDX
+        ]]>
+    </select>
+    <select id="getSortColsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SD_ID), 0) FROM SORT_COLS
+        ]]>
+    </select>
+    <select id="getSortColsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SD_ID), 0) FROM SORT_COLS
+        ]]>
+    </select>
+    <insert id="batchInsertSortCols" parameterType="java.util.Map">
+        INSERT INTO SORT_COLS (`SD_ID`,`COLUMN_NAME`,`ORDER`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SDS} + #{item.sd_id}, #{item.column_name}, #{item.order}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackSortCols" parameterType="java.util.Map">
+        DELETE FROM SORT_COLS WHERE SD_ID > ${mapPlusId.SORT_COLS}
+    </delete>
+
+    <!--TABLE_PARAMS-->
+    <select id='getTableParamsRecords' resultType='com.netease.hivetools.meta.TableParams'>
+        <![CDATA[
+            SELECT * FROM TABLE_PARAMS ORDER BY TBL_ID
+        ]]>
+    </select>
+    <select id="getTableParamsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TBL_ID), 0) FROM TABLE_PARAMS
+        ]]>
+    </select>
+    <select id="getTableParamsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TBL_ID), 0) FROM TABLE_PARAMS
+        ]]>
+    </select>
+    <insert id="batchInsertTableParams" parameterType="java.util.Map">
+        INSERT INTO TABLE_PARAMS (`TBL_ID`,`PARAM_KEY`,`PARAM_VALUE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TBLS} + #{item.tbl_id}, #{item.param_key}, #{item.param_value})
+        </foreach>
+    </insert>
+    <delete id="rollbackTableParams" parameterType="java.util.Map">
+        DELETE FROM TABLE_PARAMS WHERE TBL_ID > ${mapPlusId.TABLE_PARAMS}
+    </delete>
+
+    <!--TAB_COL_STATS-->
+    <select id='getTabColStatsRecords' resultType='com.netease.hivetools.meta.TabColStats'>
+        <![CDATA[
+            SELECT * FROM TAB_COL_STATS ORDER BY CS_ID
+        ]]>
+    </select>
+    <select id="getTabColStatsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(CS_ID), 0) FROM TAB_COL_STATS
+        ]]>
+    </select>
+    <select id="getTabColStatsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(CS_ID), 0) FROM TAB_COL_STATS
+        ]]>
+    </select>
+    <insert id="batchInsertTabColStats" parameterType="java.util.Map">
+        INSERT INTO TAB_COL_STATS (`CS_ID`,`DB_NAME`,`TABLE_NAME`,`COLUMN_NAME`,`COLUMN_TYPE`,
+        `TBL_ID`,`LONG_LOW_VALUE`,`LONG_HIGH_VALUE`,`DOUBLE_HIGH_VALUE`,`DOUBLE_LOW_VALUE`,
+        `BIG_DECIMAL_LOW_VALUE`,`BIG_DECIMAL_HIGH_VALUE`,`NUM_NULLS`,`NUM_DISTINCTS`,`AVG_COL_LEN`,
+        `MAX_COL_LEN`,`NUM_TRUES`,`NUM_FALSES`,`LAST_ANALYZED`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TAB_COL_STATS} + #{item.cs_id}, #{item.db_name}, #{item.table_name}, #{item.column_name}, #{item.column_type},
+            ${mapPlusId.TBLS} + #{item.tbl_id}, #{item.long_low_value}, #{item.long_high_value}, #{item.double_high_value}, #{item.double_low_value},
+            #{item.big_decimal_low_value}, #{item.big_decimal_high_value}, #{item.num_nulls}, #{item.num_distincts}, #{item.avg_col_len},
+            #{item.max_col_len}, #{item.num_trues}, #{item.num_falses}, #{item.last_analyzed})
+        </foreach>
+    </insert>
+    <delete id="rollbackTabColStats" parameterType="java.util.Map">
+        DELETE FROM TAB_COL_STATS WHERE CS_ID > ${mapPlusId.TAB_COL_STATS}
+    </delete>
+
+    <!--TBLS-->
+    <select id='getTblsRecords' parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Tbls'>
+        SELECT * FROM TBLS WHERE DB_ID like '${db_id}'
+    </select>
+
+    <select id="getTblsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TBL_ID), 0) FROM TBLS
+        ]]>
+    </select>
+    <select id="getTblsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TBL_ID), 0) FROM TBLS
+        ]]>
+    </select>
+    <insert id="batchInsertTbls" parameterType="java.util.Map">
+        INSERT INTO TBLS (`TBL_ID`,`CREATE_TIME`,`DB_ID`,`LAST_ACCESS_TIME`,`OWNER`,
+        `RETENTION`,`SD_ID`,`TBL_NAME`,`TBL_TYPE`,`VIEW_EXPANDED_TEXT`
+        ,`VIEW_ORIGINAL_TEXT`,`LINK_TARGET_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TBLS} + #{item.tbl_id}, #{item.create_time}, ${mapPlusId.DBS} + #{item.db_id}, #{item.last_access_time}, #{item.owner},
+            #{item.retention}, ${mapPlusId.SDS} + #{item.sd_id}, #{item.tbl_name}, #{item.tbl_type}, #{item.view_expanded_text},
+            #{item.view_original_text},
+            <if test="item.getLinkTargetId() != null">
+                ${mapPlusId.TBLS} + #{item.link_target_id})
+            </if>
+            <if test="item.getLinkTargetId() == null">
+                #{item.link_target_id})
+            </if>
+        </foreach>
+    </insert>
+    <delete id="rollbackTbls" parameterType="java.util.Map">
+        DELETE FROM TBLS WHERE TBL_ID > ${mapPlusId.TBLS}
+    </delete>
+    <delete id="deleteTbls" parameterType="com.netease.hivetools.meta.Tbls">
+        DELETE FROM PARTITION_KEY_VALS WHERE PART_ID IN (SELECT PART_ID FROM PARTITIONS WHERE TBL_ID = #{tbl_id});
+        DELETE FROM PARTITION_PARAMS WHERE PART_ID IN (select PART_ID from PARTITIONS WHERE TBL_ID = #{tbl_id});
+        DELETE FROM PARTITIONS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM PARTITION_KEYS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TABLE_PARAMS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TBL_PRIVS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TAB_COL_STATS WHERE TBL_ID = #{tbl_id};
+        DELETE FROM TBLS WHERE TBL_ID = #{tbl_id};
+    </delete>
+
+    <!--TBL_COL_PRIVS-->
+    <select id='getTblColPrivsRecords' resultType='com.netease.hivetools.meta.TblColPrivs'>
+        <![CDATA[
+            SELECT * FROM TBL_COL_PRIVS ORDER BY TBL_COLUMN_GRANT_ID
+        ]]>
+    </select>
+    <select id="getTblColPrivsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TBL_COLUMN_GRANT_ID), 0) FROM TBL_COL_PRIVS
+        ]]>
+    </select>
+    <select id="getTblColPrivsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TBL_COLUMN_GRANT_ID), 0) FROM TBL_COL_PRIVS
+        ]]>
+    </select>
+    <insert id="batchInsertTblColPrivs" parameterType="java.util.Map">
+        INSERT INTO TBL_COL_PRIVS (`TBL_COLUMN_GRANT_ID`,`COLUMN_NAME`,`CREATE_TIME`,`GRANT_OPTION`,`GRANTOR`,
+        `GRANTOR_TYPE`,`PRINCIPAL_NAME`,`PRINCIPAL_TYPE`,`TBL_COL_PRIV`,`TBL_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TBL_COL_PRIVS} + #{item.tbl_column_grant_id}, #{item.column_name}, #{item.create_time}, #{item.grant_option}, #{item.grantor},
+            #{item.grantor_type}, #{item.principal_name}, #{item.principal_type}, #{item.tbl_col_priv}, ${mapPlusId.TBLS} + #{item.tbl_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackTblColPrivs" parameterType="java.util.Map">
+        DELETE FROM TBL_COL_PRIVS WHERE TBL_COLUMN_GRANT_ID > ${mapPlusId.TBL_COL_PRIVS}
+    </delete>
+
+    <!--TBL_PRIVS-->
+    <select id='getTblPrivsRecords' resultType='com.netease.hivetools.meta.TblPrivs'>
+        <![CDATA[
+            SELECT * FROM TBL_PRIVS ORDER BY TBL_GRANT_ID
+        ]]>
+    </select>
+    <select id="getTblPrivsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TBL_GRANT_ID), 0) FROM TBL_PRIVS
+        ]]>
+    </select>
+    <select id="getTblPrivsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TBL_GRANT_ID), 0) FROM TBL_PRIVS
+        ]]>
+    </select>
+    <insert id="batchInsertTblPrivs" parameterType="java.util.Map">
+        INSERT INTO TBL_PRIVS (`TBL_GRANT_ID`,`CREATE_TIME`,`GRANT_OPTION`,`GRANTOR`,`GRANTOR_TYPE`,
+        `PRINCIPAL_NAME`,`PRINCIPAL_TYPE`,`TBL_PRIV`,`TBL_ID`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TBL_PRIVS} + #{item.tbl_grant_id}, #{item.create_time}, #{item.grant_option}, #{item.grantor}, #{item.grantor_type},
+            #{item.principal_name}, #{item.principal_type}, #{item.tbl_priv}, ${mapPlusId.TBLS} + #{item.tbl_id})
+        </foreach>
+    </insert>
+    <delete id="rollbackTblPrivs" parameterType="java.util.Map">
+        DELETE FROM TBL_PRIVS WHERE TBL_GRANT_ID > ${mapPlusId.TBL_PRIVS}
+    </delete>
+
+    <!--TXNS-->
+    <select id='getTxnsRecords' resultType='com.netease.hivetools.meta.Txns'>
+        <![CDATA[
+            SELECT * FROM TXNS ORDER BY TXN_ID
+        ]]>
+    </select>
+    <select id="getTxnsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TXN_ID), 0) FROM TXNS
+        ]]>
+    </select>
+    <select id="getTxnsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TXN_ID), 0) FROM TXNS
+        ]]>
+    </select>
+    <insert id="batchInsertTxns" parameterType="java.util.Map">
+        INSERT INTO TXNS (`TXN_ID`,`TXN_STATE`,`TXN_STARTED`,`TXN_LAST_HEARTBEAT`,`TXN_USER`,
+        `TXN_HOST`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TXNS} + #{item.txn_id}, #{item.txn_state}, #{item.txn_started}, #{item.txn_last_heartbeat}, #{item.txn_user},
+            #{item.txn_host})
+        </foreach>
+    </insert>
+    <delete id="rollbackTxns" parameterType="java.util.Map">
+        DELETE FROM TXNS WHERE TXN_ID > ${mapPlusId.TXNS}
+    </delete>
+
+    <!--TXN_COMPONENTS-->
+    <select id='getTxnComponentsRecords' resultType='com.netease.hivetools.meta.TxnComponents'>
+        <![CDATA[
+            SELECT * FROM TXN_COMPONENTS ORDER BY TC_TXNID
+        ]]>
+    </select>
+    <select id="getTxnComponentsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TC_TXNID), 0) FROM TXN_COMPONENTS
+        ]]>
+    </select>
+    <select id="getTxnComponentsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TC_TXNID), 0) FROM TXN_COMPONENTS
+        ]]>
+    </select>
+    <insert id="batchInsertTxnComponents" parameterType="java.util.Map">
+        INSERT INTO TXN_COMPONENTS (`TC_TXNID`,`TC_DATABASE`,`TC_TABLE`,`TC_PARTITION`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TXNS} + #{item.TC_TXNID}, #{item.TC_DATABASE}, #{item.TC_TABLE}, #{item.TC_PARTITION})
+        </foreach>
+    </insert>
+    <delete id="rollbackTxnComponents" parameterType="java.util.Map">
+        DELETE FROM TXN_COMPONENTS WHERE TC_TXNID > ${mapPlusId.TXN_COMPONENTS}
+    </delete>
+
+    <!--TYPES-->
+    <select id='getTypesRecords' resultType='com.netease.hivetools.meta.Types'>
+        <![CDATA[
+            SELECT * FROM TYPES ORDER BY TYPES_ID
+        ]]>
+    </select>
+    <select id="getTypesMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TYPES_ID), 0) FROM TYPES
+        ]]>
+    </select>
+    <select id="getTypesMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TYPES_ID), 0) FROM TYPES
+        ]]>
+    </select>
+    <insert id="batchInsertTypes" parameterType="java.util.Map">
+        INSERT INTO TYPES (`TYPES_ID`,`TYPE_NAME`,`TYPE1`,`GRANTOR`,`TYPE2`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusid.types} + #{item.types_id}, #{item.type_name}, #{item.type1}, #{item.type2})
+        </foreach>
+    </insert>
+    <select id="checkUniqueKeyTypes" parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Types'>
+        SELECT `TYPE_NAME` FROM TYPES WHERE `TYPE_NAME` IN
+        <foreach collection="list" item="item"  open="(" separator="," close=")">
+            #{item.type_name}
+        </foreach>
+    </select>
+    <delete id="rollbackTypes" parameterType="java.util.Map">
+        DELETE FROM TYPES WHERE TYPES_ID > ${mapPlusId.TYPES}
+    </delete>
+
+    <!--TYPE_FIELDS-->
+    <select id='getTypeFieldsRecords' resultType='com.netease.hivetools.meta.TypeFields'>
+        <![CDATA[
+            SELECT * FROM TYPE_FIELDS ORDER BY TYPE_NAME
+        ]]>
+    </select>
+    <select id="getTypeFieldsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(TYPE_NAME), 0) FROM TYPE_FIELDS
+        ]]>
+    </select>
+    <select id="getTypeFieldsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(TYPE_NAME), 0) FROM TYPE_FIELDS
+        ]]>
+    </select>
+    <insert id="batchInsertTypeFields" parameterType="java.util.Map">
+        INSERT INTO TYPE_FIELDS (`TYPE_NAME`,`COMMENT`,`FIELD_NAME`,`FIELD_TYPE`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.TYPES} + #{item.type_name}, #{item.comment}, #{item.field_name}, #{item.field_type}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackTypeFields" parameterType="java.util.Map">
+        DELETE FROM TYPE_FIELDS WHERE TYPE_NAME > ${mapPlusId.TYPE_FIELDS}
+    </delete>
+
+    <!--BUCKETING_COLS-->
+    <select id='getBucketingColsRecords' resultType='com.netease.hivetools.meta.BucketingCols'>
+        <![CDATA[
+            SELECT * FROM BUCKETING_COLS ORDER BY SD_ID, INTEGER_IDX
+        ]]>
+    </select>
+    <select id="getBucketingColsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(SD_ID), 0) FROM BUCKETING_COLS
+        ]]>
+    </select>
+    <select id="getBucketingColsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(SD_ID), 0) FROM BUCKETING_COLS
+        ]]>
+    </select>
+    <insert id="batchInsertBucketingCols" parameterType="java.util.Map">
+        INSERT INTO BUCKETING_COLS (`SD_ID`,`BUCKET_COL_NAME`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.SDS} + #{item.sd_id}, #{item.bucket_col_name}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackBucketingCols" parameterType="java.util.Map">
+        DELETE FROM BUCKETING_COLS WHERE SD_ID > ${mapPlusId.BUCKETING_COLS}
+    </delete>
+
+    <!--COLUMNS_V2-->
+    <select id='getColumnsV2Records' resultType='com.netease.hivetools.meta.ColumnsV2'>
+        <![CDATA[
+            SELECT * FROM COLUMNS_V2 ORDER BY CD_ID
+        ]]>
+    </select>
+    <select id="getColumnsV2MaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(CD_ID), 0) FROM COLUMNS_V2
+        ]]>
+    </select>
+    <select id="getColumnsV2MinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(CD_ID), 0) FROM COLUMNS_V2
+        ]]>
+    </select>
+    <insert id="batchInsertColumnsV2" parameterType="java.util.Map">
+        INSERT INTO COLUMNS_V2 (`CD_ID`,`COMMENT`,`COLUMN_NAME`,`TYPE_NAME`,`INTEGER_IDX`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.CDS} + #{item.cd_id}, #{item.comment}, #{item.column_name}, #{item.type_name}, #{item.integer_idx})
+        </foreach>
+    </insert>
+    <delete id="rollbackColumnsV2" parameterType="java.util.Map">
+        DELETE FROM COLUMNS_V2 WHERE CD_ID > ${mapPlusId.COLUMNS_V2}
+    </delete>
+
+    <!--DATABASE_PARAMS-->
+    <select id='getDatabaseParamsRecords' resultType='com.netease.hivetools.meta.DatabaseParams'>
+        <![CDATA[
+            SELECT * FROM DATABASE_PARAMS ORDER BY DB_ID
+        ]]>
+    </select>
+    <select id="getDatabaseParamsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(DB_ID), 0) FROM DATABASE_PARAMS
+        ]]>
+    </select>
+    <select id="getDatabaseParamsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(DB_ID), 0) FROM DATABASE_PARAMS
+        ]]>
+    </select>
+    <insert id="batchInsertDatabaseParams" parameterType="java.util.Map">
+        INSERT INTO DATABASE_PARAMS (`DB_ID`,`PARAM_KEY`,`PARAM_VALUE`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.DBS} + #{item.db_id}, #{item.param_key}, #{item.param_value})
+        </foreach>
+    </insert>
+    <delete id="rollbackDatabaseParams" parameterType="java.util.Map">
+        DELETE FROM DATABASE_PARAMS WHERE DB_ID > ${mapPlusId.DATABASE_PARAMS}
+    </delete>
+
+    <!--DB_PRIVS-->
+    <select id='getDbPrivsRecords' resultType='com.netease.hivetools.meta.DbPrivs'>
+        <![CDATA[
+            SELECT * FROM DB_PRIVS ORDER BY DB_GRANT_ID
+        ]]>
+    </select>
+    <select id="getDbPrivsMaxId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MAX(DB_GRANT_ID), 0) FROM DB_PRIVS
+        ]]>
+    </select>
+    <select id="getDbPrivsMinId" resultType="int">
+        <![CDATA[
+            SELECT IFNULL(MIN(DB_GRANT_ID), 0) FROM DB_PRIVS
+        ]]>
+    </select>
+    <insert id="batchInsertDbPrivs" parameterType="java.util.Map">
+        INSERT INTO DB_PRIVS (`DB_GRANT_ID`,`CREATE_TIME`,`DB_ID`,`GRANT_OPTION`,`GRANTOR`,
+        `GRANTOR_TYPE`,`PRINCIPAL_NAME`,`PRINCIPAL_TYPE`,`DB_PRIV`) VALUES
+        <foreach collection="list" item="item" index="index" separator=",">
+            (${mapPlusId.DB_PRIVS} + #{item.db_grant_id}, #{item.create_time}, ${mapPlusId.DBS} + #{item.db_id}, #{item.grant_option}, #{item.grantor},
+            #{item.grantor_type}, #{item.principal_name}, #{item.principal_type}, #{item.db_priv})
+        </foreach>
+    </insert>
+    <delete id="rollbackDbPrivs" parameterType="java.util.Map">
+        DELETE FROM DB_PRIVS WHERE DB_GRANT_ID > ${mapPlusId.DB_PRIVS}
+    </delete>
+
+    <!--VERSION-->
+    <select id='getVersionRecords' resultType='com.netease.hivetools.meta.Version'>
+        <![CDATA[
+            SELECT * FROM VERSION ORDER BY VER_ID
+        ]]>
+    </select>
+    <select id="checkUniqueKeyVersion" parameterType="java.util.Map" resultType='com.netease.hivetools.meta.Version'>
+        SELECT `SCHEMA_VERSION` FROM VERSION WHERE `SCHEMA_VERSION` NOT IN
+        <foreach collection="list" item="item"  open="(" separator="," close=")">
+            #{item.schema_version}
+        </foreach>
+    </select>
+    <delete id="rollbackVersion" parameterType="java.util.Map">
+        SELECT 0 FROM dual
+    </delete>
+</mapper>

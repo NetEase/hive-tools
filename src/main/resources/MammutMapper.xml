@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='UTF-8' ?>
+<!DOCTYPE mapper PUBLIC '-//mybatis.org//DTD Mapper 3.0//EN'
+        'http://mybatis.org/dtd/mybatis-3-mapper.dtd'>
+
+<mapper namespace='com.netease.hivetools.mappers.MammutMapper'>
+    <select id="getPfHivesite" resultType='com.netease.hivetools.mammut.PfHiveSite'>
+        SELECT a.id, a.name, a.email, a.cluster, a.xml, b.name as product FROM pf_hivesite a, pf_account b
+        WHERE a.accountid = b.id ORDER BY a.cluster, product, a.email;
+    </select>
+</mapper>
