@@ -100,7 +100,7 @@ public class Tbls {
         return view_expanded_text;
     }
 
-    public void setViewOriginalText(String viewOriginalText_) {
+    public void setZZViewOriginalText(String viewOriginalText_) {
         view_original_text = viewOriginalText_;
     }
 
